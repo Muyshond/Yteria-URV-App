@@ -24,6 +24,10 @@ service CatalogService {
     };
 
     function getRoleCollections() returns array of {
+
+    };
+
+    function getRoleCollectionRoles(roleCollectionName: String) returns array of {
         
     }
     

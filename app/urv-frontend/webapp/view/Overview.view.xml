@@ -1,0 +1,28 @@
+<mvc:View controllerName="urvfrontend.controller.Overview"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m">
+    <Page id="page" title="{i18n>title}">
+    <Button  press="getUsers" text="Users"> </Button> 
+
+    <Input id="UserID" placeholder="User ID"></Input>
+    <Button id="userButton" text="Get User Info" type="Emphasized" press="getUser"></Button>
+
+    <Panel id="userdetails">
+        <content>
+            <VBox class="sapUiSmallMargin">
+                <Text text="User ID: {userModel>/urn:ietf:params:scim:schemas:extension:sap:2.0:User/userId}" />
+                <Text text="Name: {userModel>/name/givenName} {userModel>/name/familyName}" />
+                <Text text="Email: {userModel>/emails/0/value}" />
+                <Text text="User Type: {userModel>/userType}" />
+                <Text text="Status: {userModel>/urn:ietf:params:scim:schemas:extension:sap:2.0:User/status}" />
+            </VBox>
+        </content>
+    </Panel>
+
+    <Panel id="groups">
+        <Tree id="RoleTree" items="{TreeModel>/tree}" mode="None">
+        <StandardTreeItem title="{TreeModel>name}" />
+    </Tree>
+    </Panel>
+    </Page>
+</mvc:View>

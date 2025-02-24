@@ -72,6 +72,44 @@ module.exports = cds.service.impl(async function () {
         }
     });
 
+
+
+    this.on('getRoleCollectionRoles', async (req) => {
+
+        const name = req.data.roleCollectionName
+
+        try {
+            const jwt = await getjwt();
+            console.log("JWT Token:", jwt);
+    
+            const authHeader = "Bearer " + jwt;
+            const roleCollectionURL = `https://api.authentication.us10.hana.ondemand.com/sap/rest/authorization/v2/rolecollections/${name}`;
+    
+            const response = await fetch(roleCollectionURL, {
+                method: "GET",
+                headers: {
+                    "Authorization": authHeader
+                }
+            });
+    
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+    
+            const data = await response.json();
+            console.log("Role Collections:", data);
+    
+            return data; 
+        } catch (error) {
+            console.error("Error fetching Role Collections:", error);
+            req.error(500, "Failed to fetch role collections");
+        }
+    });
+
+
+
+
+
     async function getjwt() {
         const url = "https://64b4765dtrial.authentication.us10.hana.ondemand.com/oauth/token";
         const client = "sb-na-7f7c1b12-d578-4563-a01e-4959c896365d!a396111";
