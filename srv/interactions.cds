@@ -22,5 +22,9 @@ service CatalogService {
         };
         active: Boolean;
     };
+
+    function getRoleCollections() returns array of {
+        
+    }
     
 }
