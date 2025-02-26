@@ -173,15 +173,15 @@ public setDataToTree(data: any) {
 
     onSearch(event: sap.ui.base.Event): void {
 
-        const sQuery: string = event.getParameter("newValue")?.toLowerCase() || "";
-        const oTree = this.byId("RoleTree") as sap.m.Tree;
-        const oBinding = oTree.getBinding("items") as sap.ui.model.ListBinding;
+        const searchword: string = event.getParameter("newValue")?.toLowerCase() || "";
+        const tree = this.byId("RoleTree") as sap.m.Tree;
+        const oBinding = tree.getBinding("items") as sap.ui.model.ListBinding;
 
-        if (sQuery) {
+        if (searchword) {
             const oFilter = new Filter({
                 path: "name",
                 operator: FilterOperator.Contains,
-                value1: sQuery
+                value1: searchword
             });
 
             oBinding.filter([oFilter]);
