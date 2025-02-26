@@ -2,7 +2,6 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m">
     <Page id="page" title="{i18n>title}">
-    <Button  press="getUsers" text="Users"> </Button> 
 
     <Input id="UserID" placeholder="User ID"></Input>
     <Button id="userButton" text="Get User Info" type="Emphasized" press="getUser"></Button>
@@ -20,9 +19,13 @@
     </Panel>
 
     <Panel id="groups">
+        <SearchField 
+            width="100%" 
+            placeholder="Search..." 
+            liveChange=".onSearch" />
         <Tree id="RoleTree" items="{TreeModel>/tree}" mode="None">
-        <StandardTreeItem title="{TreeModel>name}" />
-    </Tree>
+            <StandardTreeItem title="{TreeModel>name}" />
+        </Tree>
     </Panel>
     </Page>
 </mvc:View>

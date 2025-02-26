@@ -4,12 +4,13 @@ module.exports = cds.service.impl(async function () {
 
     const username = "Gilles.muyshondt@yteria.com";
     const password = "Decenny01";
-    const url = "https://adruyadgk.trial-accounts.ondemand.com/scim/Users";
-
+    const url = "https://adruyadgk.trial-accounts.ondemand.com/service/scim/Users";
+    const clientid = "976a672a-f46c-4340-bf8e-f0bc9c636ea4"
+    const clientsecret = "doLAg_EfYVOss].suaSs=WmNo=BrQbQk"
 
 
     this.on('getIASUsers', async (req) => {
-        const authHeader = "Basic " + Buffer.from(username + ":" + password).toString("base64");
+        const authHeader = "Basic " + Buffer.from(clientid + ":" + clientsecret).toString("base64");
 
         const response = await fetch(url, {
             method: "GET",
@@ -26,7 +27,7 @@ module.exports = cds.service.impl(async function () {
     this.on('getIASUser', async (req) => {
         const id = req.data.id
         console.log(id)
-        const authHeader = "Basic " + Buffer.from(username + ":" + password).toString("base64");
+        const authHeader = "Basic " + Buffer.from(clientid + ":" + clientsecret).toString("base64");
         const Userurl = url + "/" + id
         const response = await fetch(Userurl, {
             method: "GET",
@@ -34,9 +35,13 @@ module.exports = cds.service.impl(async function () {
                 "Authorization": authHeader
             }
         })
+        try{
+            const data =  await response.json();
+            return data;
+        }catch{
+            return 
+        }
         
-        const data =  await response.json();
-        return data;
         
         
     });

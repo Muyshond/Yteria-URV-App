@@ -2,7 +2,8 @@ import MessageToast from "sap/m/MessageToast";
 import Controller from "sap/ui/core/mvc/Controller";
 import { form } from "sap/ui/layout/library";
 import JSONModel from "sap/ui/model/json/JSONModel";
-
+import Filter from "sap/ui/model/Filter";
+import FilterOperator from "sap/ui/model/FilterOperator";
 /**
  * @namespace urvfrontend.controller
  */
@@ -39,11 +40,11 @@ export default class Overview extends Controller {
 
         const result: any = {}
         for (const { group, roleCollections } of formattedData) {
-            result[group] = {}; // Initialize group object
+            result[group] = {}; 
     
             for (const roleCollection of roleCollections) {
-                const response = await this.getRolecollectionRoles(roleCollection); // Call API
-                const roleCollectionData = response?.value?.[0]; // Get the first object inside "value"
+                const response = await this.getRolecollectionRoles(roleCollection); 
+                const roleCollectionData = response?.value?.[0]; 
                 const roles = roleCollectionData?.roleReferences?.map((role: any) => role.name) || [];
 
                 result[group][roleCollection] = roles;
@@ -167,6 +168,30 @@ public setDataToTree(data: any) {
             return data;
         } catch (error) {
             console.error("Error:", error);
+        }
+    }
+
+    onSearch(event: sap.ui.base.Event): void {
+
+        const sQuery: string = event.getParameter("newValue")?.toLowerCase() || "";
+        const oTree = this.byId("RoleTree") as sap.m.Tree;
+        const oBinding = oTree.getBinding("items") as sap.ui.model.ListBinding;
+
+        if (sQuery) {
+            const oFilter = new Filter({
+                path: "name",
+                operator: FilterOperator.Contains,
+                value1: sQuery
+            });
+
+            oBinding.filter([oFilter]);
+
+            
+            oTree.expandToLevel(99);
+            
+        } else {
+            oBinding.filter([]);
+            oTree.collapseAll();
         }
     }
 
