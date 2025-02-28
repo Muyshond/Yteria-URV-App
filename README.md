@@ -23,3 +23,10 @@ File or Folder | Purpose
 ## Learn More
 
 Learn more at https://cap.cloud.sap/docs/get-started/.
+
+
+
+DEPLOY
+- npm run build:cf (frontend)
+- Manually put zip from dist/ to resources
+- deploy

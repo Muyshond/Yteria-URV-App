@@ -36,6 +36,7 @@ modules:
     commands:
       - npm install
       - npm run build
+      - npm run build:cf
     supported-platforms: []
 
 - name: Ypto-URV-Application-app-content
@@ -53,37 +54,6 @@ modules:
       name: urv-frontend
       target-path: resources/
 
-- name: Ypto-URV-Application-destination-content
-  type: com.sap.application.content
-  requires:
-  - name: Ypto-URV-Application-destination-service
-    parameters:
-      content-target: true
-  - name: Ypto-URV-Application-repo-host
-    parameters:
-      service-key:
-        name: Ypto-URV-Application-repo-host-key
-  - name: uaa_Ypto-URV-Application
-    parameters:
-      service-key:
-        name: uaa_Ypto-URV-Application-key
-  parameters:
-    content:
-      instance:
-        destinations:
-        - Name: urv_app_Ypto_URV_Application_repo_host
-          ServiceInstanceName: Ypto-URV-Application-html5-service
-          ServiceKeyName: Ypto-URV-Application-repo-host-key
-          sap.cloud.service: urv-app
-        - Authentication: OAuth2UserTokenExchange
-          Name: urv_app_uaa_Ypto_URV_Application
-          ServiceInstanceName: Ypto-URV-Application-xsuaa-service
-          ServiceKeyName: uaa_Ypto-URV-Application-key
-          sap.cloud.service: urv-app
-        existing_destinations_policy: ignore
-  build-parameters:
-    no-source: true
-
 resources:
 - name: Ypto-URV-Application-db
   type: com.sap.xs.hdi-container
@@ -98,15 +68,6 @@ resources:
     service-name: Ypto-URV-Application-html5-service
     service-plan: app-host
 
-- name: Ypto-URV-Application-destination-service
-  type: org.cloudfoundry.managed-service
-  parameters:
-    config:
-      HTML5Runtime_enabled: true
-      version: 1.0.0
-    service: destination
-    service-name: Ypto-URV-Application-destination-service
-    service-plan: lite
 
 - name: uaa_Ypto-URV-Application
   type: org.cloudfoundry.managed-service

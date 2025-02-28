@@ -4,6 +4,7 @@ import { form } from "sap/ui/layout/library";
 import JSONModel from "sap/ui/model/json/JSONModel";
 import Filter from "sap/ui/model/Filter";
 import FilterOperator from "sap/ui/model/FilterOperator";
+import containsOrEquals from "sap/ui/dom/containsOrEquals";
 /**
  * @namespace urvfrontend.controller
  */
@@ -172,28 +173,36 @@ public setDataToTree(data: any) {
     }
 
     onSearch(event: sap.ui.base.Event): void {
-
+        
         const searchword: string = event.getParameter("newValue")?.toLowerCase() || "";
         const tree = this.byId("RoleTree") as sap.m.Tree;
-        const oBinding = tree.getBinding("items") as sap.ui.model.ListBinding;
+        tree.expandToLevel(999); 
 
-        if (searchword) {
-            const oFilter = new Filter({
-                path: "name",
-                operator: FilterOperator.Contains,
-                value1: searchword
-            });
-
-            oBinding.filter([oFilter]);
-
-            
-            oTree.expandToLevel(99);
-            
-        } else {
-            oBinding.filter([]);
-            oTree.collapseAll();
+        const items = tree.getItems();
+        if (!tree) return;
+        if (!searchword) {
+            items.forEach((item: any) => item.setHighlight("None"));
+            return;
         }
+
+        items.forEach((item: any) => {
+            const context = item.getBindingContext("TreeModel");
+            if (context) {
+                const index = tree.indexOfItem(item);
+                const name: string = context.getProperty("name").toLowerCase();
+                if (name.includes(searchword)) {
+                    console.log(name + searchword)
+                    item.setHighlight("Success")  
+                }else{
+
+                    item.setHighlight("None");
+                    //tree.collapse(index);
+                }
+            }
+        });
     }
+
+    
 
 
 }
