@@ -24,11 +24,17 @@
     "watch-urv-frontend": "cds watch --open urvfrontend/index.html?sap-ui-xx-viewCache=false --livereload false",
     "undeploy": "cf undeploy Ypto-URV-Application --delete-services --delete-service-keys --delete-service-brokers",
     "build": "rimraf resources mta_archives && mbt build --mtar archive",
-    "deploy": "cf deploy mta_archives/archive.mtar --retries 1"
+    "deploy": "cf deploy mta_archives/archive.mtar --retries 1",
+    "watch-project1": "cds watch --open project1/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "watch-project2": "cds watch --open project2/index.html?sap-ui-xx-viewCache=false --livereload false"
   },
   "cds": {
     "sql": {
       "native_hana_associations": false
+    },"requires": {
+      "cors": {
+        "enabled": false
+      }
     }
   },
   "workspaces": [

@@ -16,10 +16,5 @@
         "uaa.user"
       ]
     }
-  ],
-  "oauth2-configuration": {
-    "redirect-uris": [
-      "https://*.hana.ondemand.com/**"
-    ]
-  }
+  ]
 }

@@ -18,7 +18,6 @@ modules:
     instances: 1
   build-parameters:
     builder: npm-ci
-
 - name: Ypto-URV-Application-db-deployer
   type: hdb
   path: gen/db
@@ -26,19 +25,17 @@ modules:
   - name: Ypto-URV-Application-db
   parameters:
     buildpack: nodejs_buildpack
-
 - name: urv-frontend
   type: html5
   path: app/urv-frontend
   build-parameters:
-    builder: custom
     build-result: dist
+    builder: custom
     commands:
-      - npm install
-      - npm run build
-      - npm run build:cf
+    - npm install
+    - npm run build
+    - npm run build:cf
     supported-platforms: []
-
 - name: Ypto-URV-Application-app-content
   type: com.sap.application.content
   path: .
@@ -53,22 +50,117 @@ modules:
       - urv-frontend.zip
       name: urv-frontend
       target-path: resources/
-
+    - artifacts:
+      - project1.zip
+      name: project1
+      target-path: resources/
+    - artifacts:
+      - urvfrontend.zip
+      name: urvfrontend
+      target-path: resources/
+    - artifacts:
+      - project2.zip
+      name: project2
+      target-path: resources/
+- name: Ypto-URV-Application-destination-content
+  type: com.sap.application.content
+  requires:
+  - name: Ypto-URV-Application-destination-service
+    parameters:
+      content-target: true
+  - name: Ypto-URV-Application-repo-host
+    parameters:
+      service-key:
+        name: Ypto-URV-Application-repo-host-key
+  - name: uaa_Ypto-URV-Application
+    parameters:
+      service-key:
+        name: uaa_Ypto-URV-Application-key
+  parameters:
+    content:
+      instance:
+        destinations:
+        - Name: urv_app_Ypto_URV_Application_repo_host
+          ServiceInstanceName: Ypto-URV-Application-html5-service
+          ServiceKeyName: Ypto-URV-Application-repo-host-key
+          sap.cloud.service: urv-app
+        - Authentication: OAuth2UserTokenExchange
+          Name: urv_app_uaa_Ypto_URV_Application
+          ServiceInstanceName: Ypto-URV-Application-xsuaa-service
+          ServiceKeyName: uaa_Ypto-URV-Application-key
+          sap.cloud.service: urv-app
+        existing_destinations_policy: ignore
+  build-parameters:
+    no-source: true
+- name: project1
+  type: html5
+  path: app/project1
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+- name: urvfrontend
+  type: html5
+  path: app/urv-frontend
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+- name: project2
+  type: html5
+  path: app/project2
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
 resources:
 - name: Ypto-URV-Application-db
   type: com.sap.xs.hdi-container
   parameters:
     service: hana
     service-plan: hdi-shared
-
 - name: Ypto-URV-Application-repo-host
   type: org.cloudfoundry.managed-service
   parameters:
     service: html5-apps-repo
     service-name: Ypto-URV-Application-html5-service
     service-plan: app-host
-
-
+- name: Ypto-URV-Application-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: true
+      init_data:
+        instance:
+          destinations:
+          - Authentication: NoAuthentication
+            Name: ui5
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://ui5.sap.com
+          - Authentication: NoAuthentication
+            HTML5.DynamicDestination: true
+            HTML5.ForwardAuthToken: true
+            Name: Ypto-URV-Application-srv-api
+            ProxyType: Internet
+            Type: HTTP
+            URL: ~{srv-api/srv-url}
+          existing_destinations_policy: update
+      version: 1.0.0
+    service: destination
+    service-name: Ypto-URV-Application-destination-service
+    service-plan: lite
+  requires:
+  - name: srv-api
 - name: uaa_Ypto-URV-Application
   type: org.cloudfoundry.managed-service
   parameters:
@@ -76,10 +168,9 @@ resources:
     service: xsuaa
     service-name: Ypto-URV-Application-xsuaa-service
     service-plan: application
-
 parameters:
+  deploy_mode: html5-repo
   enable-parallel-deployments: true
-
 build-parameters:
   before-all:
   - builder: custom

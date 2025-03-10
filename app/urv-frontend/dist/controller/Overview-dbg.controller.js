@@ -1,6 +1,6 @@
 "use strict";
 
-sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model/json/JSONModel", "sap/ui/model/Filter", "sap/ui/model/FilterOperator"], function (MessageToast, Controller, JSONModel, Filter, FilterOperator) {
+sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model/json/JSONModel"], function (MessageToast, Controller, JSONModel) {
   "use strict";
 
   /**
@@ -147,19 +147,27 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
     onSearch: function _onSearch(event) {
       const searchword = event.getParameter("newValue")?.toLowerCase() || "";
       const tree = this.byId("RoleTree");
-      const oBinding = tree.getBinding("items");
-      if (searchword) {
-        const oFilter = new Filter({
-          path: "name",
-          operator: FilterOperator.Contains,
-          value1: searchword
-        });
-        oBinding.filter([oFilter]);
-        oTree.expandToLevel(99);
-      } else {
-        oBinding.filter([]);
-        oTree.collapseAll();
+      tree.expandToLevel(999);
+      const items = tree.getItems();
+      if (!tree) return;
+      if (!searchword) {
+        items.forEach(item => item.setHighlight("None"));
+        return;
       }
+      items.forEach(item => {
+        const context = item.getBindingContext("TreeModel");
+        if (context) {
+          const index = tree.indexOfItem(item);
+          const name = context.getProperty("name").toLowerCase();
+          if (name.includes(searchword)) {
+            console.log(name + searchword);
+            item.setHighlight("Success");
+          } else {
+            item.setHighlight("None");
+            //tree.collapse(index);
+          }
+        }
+      });
     }
   });
   return Overview;

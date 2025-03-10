@@ -21,7 +21,7 @@
     <Panel id="groups">
         <SearchField 
             width="100%" 
-            placeholder="Search..." 
+            placeholder="Search in groups..." 
             liveChange=".onSearch" />
         <Tree id="RoleTree" items="{TreeModel>/tree}" mode="None">
             <StandardTreeItem title="{TreeModel>name}" />

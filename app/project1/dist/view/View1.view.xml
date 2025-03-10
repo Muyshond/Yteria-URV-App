@@ -1,0 +1,9 @@
+<mvc:View controllerName="project1.controller.View1"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m">
+    <Page id="page" title="{i18n>title}">
+
+        <Button id="userButton" text="Get User Info" type="Emphasized" press="getRoleCollections"></Button>
+
+    </Page>
+</mvc:View>
