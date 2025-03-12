@@ -51,16 +51,12 @@ modules:
       name: urv-frontend
       target-path: resources/
     - artifacts:
-      - project1.zip
-      name: project1
-      target-path: resources/
-    - artifacts:
       - urvfrontend.zip
       name: urvfrontend
       target-path: resources/
     - artifacts:
-      - project2.zip
-      name: project2
+      - captest.zip
+      name: captest
       target-path: resources/
 - name: Ypto-URV-Application-destination-content
   type: com.sap.application.content
@@ -92,16 +88,6 @@ modules:
         existing_destinations_policy: ignore
   build-parameters:
     no-source: true
-- name: project1
-  type: html5
-  path: app/project1
-  build-parameters:
-    build-result: dist
-    builder: custom
-    commands:
-    - npm install
-    - npm run build:cf
-    supported-platforms: []
 - name: urvfrontend
   type: html5
   path: app/urv-frontend
@@ -112,9 +98,9 @@ modules:
     - npm install
     - npm run build:cf
     supported-platforms: []
-- name: project2
+- name: captest
   type: html5
-  path: app/project2
+  path: app/captest
   build-parameters:
     build-result: dist
     builder: custom

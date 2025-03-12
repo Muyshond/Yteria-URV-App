@@ -26,12 +26,15 @@
     "build": "rimraf resources mta_archives && mbt build --mtar archive",
     "deploy": "cf deploy mta_archives/archive.mtar --retries 1",
     "watch-project1": "cds watch --open project1/index.html?sap-ui-xx-viewCache=false --livereload false",
-    "watch-project2": "cds watch --open project2/index.html?sap-ui-xx-viewCache=false --livereload false"
+    "watch-project2": "cds watch --open project2/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "watch-captest": "cds watch --open captest/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "watch-test": "cds watch --open test/index.html?sap-ui-xx-viewCache=false --livereload false"
   },
   "cds": {
     "sql": {
       "native_hana_associations": false
-    },"requires": {
+    },
+    "requires": {
       "cors": {
         "enabled": false
       }
