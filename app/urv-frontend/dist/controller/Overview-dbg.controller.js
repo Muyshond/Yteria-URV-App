@@ -97,10 +97,12 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
     },
     getIASUser: async function _getIASUser(userid) {
       try {
+        // const model = this.getOwnerComponent()?.getModel() as ODataModel;
+        // const bookBinding = model.getKeepAliveContext(`/getIASUser(id='${userid}')`);
+        // console.log( await bookBinding.requestObject());
+
         const response = await fetch(`odata/v4/catalog/getIASUser(id='${userid}')`);
-        if (!response.ok) {
-          throw new Error(`Error! Status: ${response.status}`);
-        }
+        console.log(response);
         const data = await response.json();
         console.log("Users:", data);
         return data;
@@ -122,7 +124,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
     // } 
     getRoleCollections: async function _getRoleCollections() {
       try {
-        const response = await fetch("/odata/v4/catalog/getRoleCollections");
+        const response = await fetch("odata/v4/catalog/getRoleCollections");
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
         }
@@ -134,7 +136,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
     },
     getRolecollectionRoles: async function _getRolecollectionRoles(roleCollection) {
       try {
-        const response = await fetch(`/odata/v4/catalog/getRoleCollectionRoles(roleCollectionName='${roleCollection}')`);
+        const response = await fetch(`odata/v4/catalog/getRoleCollectionRoles(roleCollectionName='${roleCollection}')`);
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
         }

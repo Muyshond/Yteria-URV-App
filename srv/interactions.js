@@ -2,8 +2,7 @@ const cds = require('@sap/cds');
 
 module.exports = cds.service.impl(async function () {
 
-    const username = "Gilles.muyshondt@yteria.com";
-    const password = "Decenny01";
+    
     const url = "https://adruyadgk.trial-accounts.ondemand.com/service/scim/Users";
     const clientid = "976a672a-f46c-4340-bf8e-f0bc9c636ea4"
     const clientsecret = "doLAg_EfYVOss].suaSs=WmNo=BrQbQk"

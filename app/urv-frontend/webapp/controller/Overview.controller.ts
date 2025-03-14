@@ -119,11 +119,13 @@ public setDataToTree(data: any) {
 
     public async getIASUser(userid: string) {
         try {
+            // const model = this.getOwnerComponent()?.getModel() as ODataModel;
+            // const bookBinding = model.getKeepAliveContext(`/getIASUser(id='${userid}')`);
+            // console.log( await bookBinding.requestObject());
+                
             const response = await fetch(`odata/v4/catalog/getIASUser(id='${userid}')`);
+            console.log(response);
             
-            if (!response.ok) {
-                throw new Error(`Error! Status: ${response.status}`);
-            }
     
             const data = await response.json();
             console.log("Users:", data);
