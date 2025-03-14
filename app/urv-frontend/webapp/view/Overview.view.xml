@@ -24,7 +24,7 @@
             placeholder="Search in groups..." 
             liveChange=".onSearch" />
         <Tree id="RoleTree" items="{TreeModel>/tree}" mode="None">
-            <StandardTreeItem title="{TreeModel>name}" />
+            <StandardTreeItem title="{TreeModel>name}" icon="{TreeModel>icon}" />
         </Tree>
     </Panel>
     </Page>
