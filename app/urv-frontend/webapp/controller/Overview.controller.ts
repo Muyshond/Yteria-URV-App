@@ -119,7 +119,7 @@ public setDataToTree(data: any) {
 
     public async getIASUser(userid: string) {
         try {
-            const response = await fetch(`/odata/v4/catalog/getIASUser(id='${userid}')`);
+            const response = await fetch(`odata/v4/catalog/getIASUser(id='${userid}')`);
             
             if (!response.ok) {
                 throw new Error(`Error! Status: ${response.status}`);
@@ -149,7 +149,7 @@ public setDataToTree(data: any) {
 
     public async getRoleCollections(){
         try {
-            const response = await fetch("/odata/v4/catalog/getRoleCollections");
+            const response = await fetch("odata/v4/catalog/getRoleCollections");
             if (!response.ok) {
                 throw new Error(`Error: ${response.status}`);
             }
@@ -162,7 +162,7 @@ public setDataToTree(data: any) {
 
     public async getRolecollectionRoles(roleCollection: string){
         try {
-            const response = await fetch(`/odata/v4/catalog/getRoleCollectionRoles(roleCollectionName='${roleCollection}')`);
+            const response = await fetch(`odata/v4/catalog/getRoleCollectionRoles(roleCollectionName='${roleCollection}')`);
             if (!response.ok) {
                 throw new Error(`Error: ${response.status}`);
             }

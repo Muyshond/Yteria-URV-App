@@ -119,7 +119,7 @@ public setDataToTree(data: any) {
 
     public async getIASUser(userid: string) {
         try {
-            const response = await fetch(`/odata/v4/catalog/getIASUser(id='${userid}')`);
+            const response = await fetch(`odata/v4/catalog/getIASUser(id='${userid}')`);
             
             if (!response.ok) {
                 throw new Error(`Error! Status: ${response.status}`);

@@ -97,7 +97,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
     },
     getIASUser: async function _getIASUser(userid) {
       try {
-        const response = await fetch(`/odata/v4/catalog/getIASUser(id='${userid}')`);
+        const response = await fetch(`odata/v4/catalog/getIASUser(id='${userid}')`);
         if (!response.ok) {
           throw new Error(`Error! Status: ${response.status}`);
         }

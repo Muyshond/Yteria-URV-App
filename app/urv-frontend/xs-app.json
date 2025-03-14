@@ -5,7 +5,7 @@
     {
       "source": "^/odata/(.*)$",
       "target": "/odata/$1",
-      "destination": "ui5",
+      "destination": "Ypto-URV-Application-srv-api",
       "authenticationType": "xsuaa",
       "csrfProtection": false
     },

@@ -33,7 +33,6 @@ modules:
     builder: custom
     commands:
     - npm install
-    - npm run build
     - npm run build:cf
     supported-platforms: []
 - name: Ypto-URV-Application-app-content
@@ -47,16 +46,8 @@ modules:
     build-result: resources
     requires:
     - artifacts:
-      - urv-frontend.zip
-      name: urv-frontend
-      target-path: resources/
-    - artifacts:
       - urvfrontend.zip
-      name: urvfrontend
-      target-path: resources/
-    - artifacts:
-      - captest.zip
-      name: captest
+      name: urv-frontend
       target-path: resources/
 - name: Ypto-URV-Application-destination-content
   type: com.sap.application.content
@@ -85,29 +76,9 @@ modules:
           ServiceInstanceName: Ypto-URV-Application-xsuaa-service
           ServiceKeyName: uaa_Ypto-URV-Application-key
           sap.cloud.service: urv-app
-        existing_destinations_policy: ignore
+        existing_destinations_policy: update
   build-parameters:
     no-source: true
-- name: urvfrontend
-  type: html5
-  path: app/urv-frontend
-  build-parameters:
-    build-result: dist
-    builder: custom
-    commands:
-    - npm install
-    - npm run build:cf
-    supported-platforms: []
-- name: captest
-  type: html5
-  path: app/captest
-  build-parameters:
-    build-result: dist
-    builder: custom
-    commands:
-    - npm install
-    - npm run build:cf
-    supported-platforms: []
 resources:
 - name: Ypto-URV-Application-db
   type: com.sap.xs.hdi-container
