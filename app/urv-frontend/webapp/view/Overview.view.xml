@@ -1,11 +1,23 @@
 <mvc:View controllerName="urvfrontend.controller.Overview"
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns="sap.m">
-    <Page id="page" title="{i18n>title}">
+    xmlns="sap.m"
+        xmlns:core="sap.ui.core">
 
-    <Input id="UserID" placeholder="User ID"></Input>
-    <Button id="userButton" text="Get User Info" type="Emphasized" press="getUser"></Button>
+    <Page id="page" title="URV Application tool">
+    <FlexBox direction="Row" alignItems="Center" width="100%" >
+        <Input id="UserID" placeholder="User ID" />
+        <Select id="select" >
+            <items>
+                <core:Item key="user" text="Search by UserID" />
+                <core:Item key="group" text="Search by group" />
+                
+            </items>
+        </Select>
+    </FlexBox>
+    <Button id="userButton" text="Search" type="Emphasized" press="getUser"></Button>
 
+
+<Panel id="byUserId" visible="false">
     <Panel id="userdetails">
         <content>
             <VBox class="sapUiSmallMargin">
@@ -27,5 +39,13 @@
             <StandardTreeItem title="{TreeModel>name}" icon="{TreeModel>icon}" />
         </Tree>
     </Panel>
+</Panel>
+
+
+<Panel id="bygroup" visible="false">
+    
+</Panel>
+    
     </Page>
+    
 </mvc:View>

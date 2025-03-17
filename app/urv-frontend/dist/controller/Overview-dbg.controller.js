@@ -9,20 +9,23 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
   const Overview = Controller.extend("urvfrontend.controller.Overview", {
     /*eslint-disable @typescript-eslint/no-empty-function*/onInit: function _onInit() {},
     getUser: async function _getUser() {
-      const oModel = this.getView()?.getModel();
-      console.log(oModel);
-      const oBinding = oModel.bindContext("/getIASUsers(...)", undefined, {});
-      oBinding.execute().then(() => {
-        const oContext = oBinding.getBoundContext();
-        if (!oContext) {
-          console.error("Function execution returned an undefined context!");
-          return;
-        }
-        const aUsers = oContext.getObject();
-        console.log("IAS Users:", aUsers);
-      }).catch(oError => {
-        console.error("Error fetching IAS Users:", oError);
-      });
+      //delete na testen
+      // const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
+      // const oBinding = oModel.bindContext("/getIASUsers(...)", undefined, {});
+
+      // oBinding.execute()
+      //     .then(() => {
+      //         const oContext = oBinding.getBoundContext();
+      //         if (!oContext) {
+      //             console.error("Function execution returned an undefined context!");
+      //             return;
+      //         }
+      //         const aUsers = oContext.getObject();
+      //     })
+      //     .catch((oError: any) => {
+      //         console.error("Error fetching IAS Users:", oError);
+      // });
+
       const userInput = this.getView()?.byId("UserID");
       const userID = userInput.getValue();
       if (userID === "") {
@@ -30,12 +33,11 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
         return;
       }
       const user = await this.getIASUser(userID);
-      const userdata = user.value?.[0];
+      const userdata = user[0];
       //const userGroups = userdata.groups.map((group: any) => group.display); //groups deftig zetten 
       //this.getRolecollectionRoles("AuthGroup.Content.Admin") //test (delete erna)
       this.setUserDetails(userdata);
       const grouprolerelationship = await this.getUserCollectionsViaGroup(userdata);
-      console.log(grouprolerelationship);
       const formattedData = Object.entries(grouprolerelationship).map(_ref => {
         let [group, value] = _ref;
         return {
@@ -55,7 +57,6 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
           const roles = roleCollectionData?.roleReferences?.map(role => role.name) || [];
           result[group][roleCollection] = roles;
         }
-        console.log(result);
         this.setDataToTree(result);
       }
     },
@@ -83,7 +84,6 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
       }), "TreeModel");
     },
     setUserDetails: function _setUserDetails(userdata) {
-      console.log(userdata);
       let oModel = this.getView()?.getModel("userModel");
       if (!oModel) {
         oModel = new JSONModel();
@@ -92,7 +92,6 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
       oModel.setData(userdata);
     },
     getUserCollectionsViaGroup: async function _getUserCollectionsViaGroup(user) {
-      console.log(user);
       const userGroups = user.groups.map(group => group.display);
       const roleCollectionsData = await this.getRoleCollections();
       const roleCollections = roleCollectionsData?.value || [];
@@ -115,15 +114,28 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
     },
     getIASUser: async function _getIASUser(userid) {
       try {
+        const oModel = this.getView()?.getModel();
+        const oBinding = oModel.bindContext(`/getIASUser(...)`, undefined, {});
+        oBinding.setParameter("id", userid);
+        const data = oBinding.execute().then(() => {
+          const oContext = oBinding.getBoundContext();
+          if (!oContext) {
+            return;
+          }
+          const user = oContext.getObject();
+          return user.value;
+        }).catch(oError => {
+          console.error("Error fetching IAS User:", oError);
+        });
+        return data;
+
         // const model = this.getOwnerComponent()?.getModel() as ODataModel;
         // const bookBinding = model.getKeepAliveContext(`/getIASUser(id='${userid}')`);
-        // console.log( await bookBinding.requestObject());
 
-        const response = await fetch(`/odata/v4/catalog/getIASUser(id='${userid}')`);
-        console.log(response);
-        const data = await response.json();
-        console.log("Users:", data);
-        return data;
+        // const response = await fetch(`/odata/v4/catalog/getIASUser(id='${userid}')`);
+
+        // const data = await response.json();
+        // return data;
       } catch (error) {
         console.error("Error :", error);
       }
@@ -135,18 +147,31 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
     //             throw new Error(`Error: ${response.status}`);
     //         }
     //         const data = await response.json();
-    //         console.log("Fetched Users:", data);
     //     } catch (error) {
     //         console.error("Error:", error);
     //     }
     // } 
     getRoleCollections: async function _getRoleCollections() {
       try {
-        const response = await fetch("/odata/v4/catalog/getRoleCollections");
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
-        const data = await response.json();
+        // const response = await fetch("/odata/v4/catalog/getRoleCollections");
+        // if (!response.ok) {
+        //     throw new Error(`Error: ${response.status}`);
+        // }
+        // const data = await response.json();
+        // return data;
+
+        const oModel = this.getView()?.getModel();
+        const oBinding = oModel.bindContext(`/getRoleCollections(...)`, undefined, {});
+        const data = oBinding.execute().then(() => {
+          const oContext = oBinding.getBoundContext();
+          if (!oContext) {
+            return;
+          }
+          const user = oContext.getObject();
+          return user;
+        }).catch(oError => {
+          console.error("Error fetching role collectons:", oError);
+        });
         return data;
       } catch (error) {
         console.error("Error:", error);
@@ -154,11 +179,26 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
     },
     getRolecollectionRoles: async function _getRolecollectionRoles(roleCollection) {
       try {
-        const response = await fetch(`/odata/v4/catalog/getRoleCollectionRoles(roleCollectionName='${roleCollection}')`);
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
-        const data = await response.json();
+        // const response = await fetch(`/odata/v4/catalog/getRoleCollectionRoles(roleCollectionName='${roleCollection}')`);
+        // if (!response.ok) {
+        //     throw new Error(`Error: ${response.status}`);
+        // }
+        // const data = await response.json();
+        // return data;
+
+        const oModel = this.getView()?.getModel();
+        const oBinding = oModel.bindContext(`/getRoleCollectionRoles(...)`, undefined, {});
+        oBinding.setParameter("roleCollectionName", roleCollection);
+        const data = oBinding.execute().then(() => {
+          const oContext = oBinding.getBoundContext();
+          if (!oContext) {
+            return;
+          }
+          const user = oContext.getObject();
+          return user;
+        }).catch(oError => {
+          console.error("Error fetching role collecton roles:", oError);
+        });
         return data;
       } catch (error) {
         console.error("Error:", error);

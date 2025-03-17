@@ -13,34 +13,15 @@ export default class Overview extends Controller {
     /*eslint-disable @typescript-eslint/no-empty-function*/
     public onInit(): void {
 
-        
+      
     }
 
     
 
 
     public async getUser() {
-
-        //delete na testen
-        // const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
-        // const oBinding = oModel.bindContext("/getIASUsers(...)", undefined, {});
-
-        // oBinding.execute()
-        //     .then(() => {
-        //         const oContext = oBinding.getBoundContext();
-        //         if (!oContext) {
-        //             console.error("Function execution returned an undefined context!");
-        //             return;
-        //         }
-        //         const aUsers = oContext.getObject();
-        //     })
-        //     .catch((oError: any) => {
-        //         console.error("Error fetching IAS Users:", oError);
-        // });
-        
-
-
-
+        const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
+        const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
 
         const userInput = this.getView()?.byId("UserID") as sap.m.Input;
         const userID = userInput.getValue();
@@ -48,31 +29,52 @@ export default class Overview extends Controller {
             MessageToast.show("Please enter a valid ID");
             return;
         }
-        const user: any = await this.getIASUser(userID);
-        const userdata = user[0]
-        //const userGroups = userdata.groups.map((group: any) => group.display); //groups deftig zetten 
-        //this.getRolecollectionRoles("AuthGroup.Content.Admin") //test (delete erna)
-        this.setUserDetails(userdata);
-        const grouprolerelationship = await this.getUserCollectionsViaGroup(userdata)
+        const selectinput = this.getView()?.byId("select") as sap.m.select;
+        const selectedvalue = selectinput.getSelectedItem();
+        console.log(selectedvalue.mProperties.key)
+        if(selectedvalue.mProperties.key === "group"){
 
-        const formattedData = Object.entries(grouprolerelationship).map(([group, value]) => ({
-            group, 
-            roleCollections: value
 
-        }));
 
-        const result: any = {}
-        for (const { group, roleCollections } of formattedData) {
-            result[group] = {}; 
+
+
+
+            grouppanel.setVisible(true);
+            userpanel.setVisible(false);
+        } else if(selectedvalue.mProperties.key === "user"){
+
+            const user: any = await this.getIASUser(userID);
+            console.log(user);
+            if(user.length === 0){
+                MessageToast.show("User with id " + userID + " not found.");
+                grouppanel.setVisible(false);
+                userpanel.setVisible(false);
+                return;
+            }
+            const userdata = user[0]
+            this.setUserDetails(userdata);
+            const grouprolerelationship = await this.getUserCollectionsViaGroup(userdata)
+            const formattedData = Object.entries(grouprolerelationship).map(([group, value]) => ({
+                group, 
+                roleCollections: value
+            }));
+            const result: any = {}
+            for (const { group, roleCollections } of formattedData) {
+                result[group] = {}; 
+        
+                for (const roleCollection of roleCollections) {
+                    const response = await this.getRolecollectionRoles(roleCollection); 
+                    const roleCollectionData = response?.value?.[0]; 
+                    const roles = roleCollectionData?.roleReferences?.map((role: any) => role.name) || [];
     
-            for (const roleCollection of roleCollections) {
-                const response = await this.getRolecollectionRoles(roleCollection); 
-                const roleCollectionData = response?.value?.[0]; 
-                const roles = roleCollectionData?.roleReferences?.map((role: any) => role.name) || [];
+                    result[group][roleCollection] = roles;
+            }
+            this.setDataToTree(result);
+            grouppanel.setVisible(false);
+            userpanel.setVisible(true);
+        } 
 
-                result[group][roleCollection] = roles;
-        }
-        this.setDataToTree(result);
+
 
     }
 }
@@ -138,10 +140,6 @@ public setDataToTree(data: any) {
 
 
 
-    
-
-
-
     public async getIASUser(userid: string) {
         try {
             const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
@@ -162,40 +160,18 @@ public setDataToTree(data: any) {
                 });
             return data;
                 
-            // const model = this.getOwnerComponent()?.getModel() as ODataModel;
-            // const bookBinding = model.getKeepAliveContext(`/getIASUser(id='${userid}')`);
-                
-            // const response = await fetch(`/odata/v4/catalog/getIASUser(id='${userid}')`);
-            
-    
-            // const data = await response.json();
-            // return data;
+
     
         } catch (error) {
             console.error("Error :", error);
         }
     }
 
-    // public async getUsers() {
-    //     try {
-    //         const response = await fetch("/odata/v4/catalog/getIASUsers");
-    //         if (!response.ok) {
-    //             throw new Error(`Error: ${response.status}`);
-    //         }
-    //         const data = await response.json();
-    //     } catch (error) {
-    //         console.error("Error:", error);
-    //     }
-    // } 
+
 
     public async getRoleCollections(){
         try {
-            // const response = await fetch("/odata/v4/catalog/getRoleCollections");
-            // if (!response.ok) {
-            //     throw new Error(`Error: ${response.status}`);
-            // }
-            // const data = await response.json();
-            // return data;
+
             
             const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
             const oBinding = oModel.bindContext(`/getRoleCollections(...)`, undefined, {});
@@ -223,12 +199,7 @@ public setDataToTree(data: any) {
 
     public async getRolecollectionRoles(roleCollection: string){
         try {
-            // const response = await fetch(`/odata/v4/catalog/getRoleCollectionRoles(roleCollectionName='${roleCollection}')`);
-            // if (!response.ok) {
-            //     throw new Error(`Error: ${response.status}`);
-            // }
-            // const data = await response.json();
-            // return data;
+
 
 
             const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
