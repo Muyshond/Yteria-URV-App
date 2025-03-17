@@ -13,12 +13,38 @@ export default class Overview extends Controller {
     /*eslint-disable @typescript-eslint/no-empty-function*/
     public onInit(): void {
 
+        
     }
 
     
 
 
     public async getUser() {
+
+
+        const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
+        console.log(oModel)
+        const oBinding = oModel.bindContext("/getIASUsers(...)", undefined, {});
+
+        oBinding.execute()
+            .then(() => {
+                const oContext = oBinding.getBoundContext();
+                if (!oContext) {
+                    console.error("Function execution returned an undefined context!");
+                    return;
+                }
+
+                const aUsers = oContext.getObject();
+                console.log("IAS Users:", aUsers);
+            })
+            .catch((oError: any) => {
+                console.error("Error fetching IAS Users:", oError);
+            });
+        
+
+
+
+
         const userInput = this.getView()?.byId("UserID") as sap.m.Input;
         const userID = userInput.getValue();
         if(userID === ""){
@@ -61,9 +87,14 @@ export default class Overview extends Controller {
 public setDataToTree(data: any) {
     const treeformat = Object.entries(data).map(([groupName, roleCollections]) => ({
         name: groupName,
+        icon: "sap-icon://group", 
         children: Object.entries(roleCollections as Record<string, string[]>).map(([roleCollectionName, roles]) => ({
             name: roleCollectionName,
-            children: (roles || []).map((role: string) => ({ name: role }))
+            icon: "sap-icon://manager",  
+            children: (roles || []).map((role: string) => ({ 
+                name: role,
+                icon: "sap-icon://role"  
+            }))
         }))
     }));
     
@@ -73,6 +104,7 @@ public setDataToTree(data: any) {
 
 
     public setUserDetails(userdata: any) {
+        console.log(userdata)
         let oModel = this.getView()?.getModel("userModel") as JSONModel;
         if (!oModel) {
             oModel = new JSONModel();
@@ -123,7 +155,7 @@ public setDataToTree(data: any) {
             // const bookBinding = model.getKeepAliveContext(`/getIASUser(id='${userid}')`);
             // console.log( await bookBinding.requestObject());
                 
-            const response = await fetch(`odata/v4/catalog/getIASUser(id='${userid}')`);
+            const response = await fetch(`/odata/v4/catalog/getIASUser(id='${userid}')`);
             console.log(response);
             
     
@@ -151,7 +183,7 @@ public setDataToTree(data: any) {
 
     public async getRoleCollections(){
         try {
-            const response = await fetch("odata/v4/catalog/getRoleCollections");
+            const response = await fetch("/odata/v4/catalog/getRoleCollections");
             if (!response.ok) {
                 throw new Error(`Error: ${response.status}`);
             }
@@ -164,7 +196,7 @@ public setDataToTree(data: any) {
 
     public async getRolecollectionRoles(roleCollection: string){
         try {
-            const response = await fetch(`odata/v4/catalog/getRoleCollectionRoles(roleCollectionName='${roleCollection}')`);
+            const response = await fetch(`/odata/v4/catalog/getRoleCollectionRoles(roleCollectionName='${roleCollection}')`);
             if (!response.ok) {
                 throw new Error(`Error: ${response.status}`);
             }

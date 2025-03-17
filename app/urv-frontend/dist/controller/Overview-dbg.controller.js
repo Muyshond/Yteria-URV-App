@@ -9,6 +9,20 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
   const Overview = Controller.extend("urvfrontend.controller.Overview", {
     /*eslint-disable @typescript-eslint/no-empty-function*/onInit: function _onInit() {},
     getUser: async function _getUser() {
+      const oModel = this.getView()?.getModel();
+      console.log(oModel);
+      const oBinding = oModel.bindContext("/getIASUsers(...)", undefined, {});
+      oBinding.execute().then(() => {
+        const oContext = oBinding.getBoundContext();
+        if (!oContext) {
+          console.error("Function execution returned an undefined context!");
+          return;
+        }
+        const aUsers = oContext.getObject();
+        console.log("IAS Users:", aUsers);
+      }).catch(oError => {
+        console.error("Error fetching IAS Users:", oError);
+      });
       const userInput = this.getView()?.byId("UserID");
       const userID = userInput.getValue();
       if (userID === "") {
@@ -50,12 +64,15 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
         let [groupName, roleCollections] = _ref2;
         return {
           name: groupName,
+          icon: "sap-icon://group",
           children: Object.entries(roleCollections).map(_ref3 => {
             let [roleCollectionName, roles] = _ref3;
             return {
               name: roleCollectionName,
+              icon: "sap-icon://manager",
               children: (roles || []).map(role => ({
-                name: role
+                name: role,
+                icon: "sap-icon://role"
               }))
             };
           })
@@ -66,6 +83,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
       }), "TreeModel");
     },
     setUserDetails: function _setUserDetails(userdata) {
+      console.log(userdata);
       let oModel = this.getView()?.getModel("userModel");
       if (!oModel) {
         oModel = new JSONModel();
@@ -101,7 +119,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
         // const bookBinding = model.getKeepAliveContext(`/getIASUser(id='${userid}')`);
         // console.log( await bookBinding.requestObject());
 
-        const response = await fetch(`odata/v4/catalog/getIASUser(id='${userid}')`);
+        const response = await fetch(`/odata/v4/catalog/getIASUser(id='${userid}')`);
         console.log(response);
         const data = await response.json();
         console.log("Users:", data);
@@ -124,7 +142,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
     // } 
     getRoleCollections: async function _getRoleCollections() {
       try {
-        const response = await fetch("odata/v4/catalog/getRoleCollections");
+        const response = await fetch("/odata/v4/catalog/getRoleCollections");
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
         }
@@ -136,7 +154,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
     },
     getRolecollectionRoles: async function _getRolecollectionRoles(roleCollection) {
       try {
-        const response = await fetch(`odata/v4/catalog/getRoleCollectionRoles(roleCollectionName='${roleCollection}')`);
+        const response = await fetch(`/odata/v4/catalog/getRoleCollectionRoles(roleCollectionName='${roleCollection}')`);
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
         }

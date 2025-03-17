@@ -9,11 +9,11 @@
     <Panel id="userdetails">
         <content>
             <VBox class="sapUiSmallMargin">
-                <Text text="User ID: {userModel>/urn:ietf:params:scim:schemas:extension:sap:2.0:User/userId}" />
+                <Text text="User ID: {userModel>/urn:ietf:params:scim:schemas:extension:sap:2.0:User/id}" />
                 <Text text="Name: {userModel>/name/givenName} {userModel>/name/familyName}" />
                 <Text text="Email: {userModel>/emails/0/value}" />
                 <Text text="User Type: {userModel>/userType}" />
-                <Text text="Status: {userModel>/urn:ietf:params:scim:schemas:extension:sap:2.0:User/status}" />
+                <Text text="Status: {userModel>/userUuid}" />
             </VBox>
         </content>
     </Panel>
@@ -24,7 +24,7 @@
             placeholder="Search in groups..." 
             liveChange=".onSearch" />
         <Tree id="RoleTree" items="{TreeModel>/tree}" mode="None">
-            <StandardTreeItem title="{TreeModel>name}" />
+            <StandardTreeItem title="{TreeModel>name}" icon="{TreeModel>icon}" />
         </Tree>
     </Panel>
     </Page>

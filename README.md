@@ -27,6 +27,7 @@ Learn more at https://cap.cloud.sap/docs/get-started/.
 
 
 DEPLOY
+- In controller /odata, remove / to get data
 - npm run build:cf (frontend)
 - Manually put zip from dist/ to resources
 - deploy
