@@ -32,7 +32,6 @@ export default class Overview extends Controller {
         }
         const selectinput = this.getView()?.byId("select") as sap.m.select;
         const selectedvalue = selectinput.getSelectedItem();
-        console.log(selectedvalue.mProperties.key);
         //ZOEK OP GROUP
         if(selectedvalue.mProperties.key === "group"){
             const group = await this.getGroup(userID);
@@ -40,7 +39,6 @@ export default class Overview extends Controller {
                 MessageToast.show("Could not find Group with id " + userID);
                 return;
             }
-            console.log(group)
             this.setGroupDetails(group.value[0]);
             const members = group.value[0].members;
             if(members.length  !== 0){
@@ -56,7 +54,6 @@ export default class Overview extends Controller {
 
                 result[roleCollection] = roles;
             }   
-            console.log(result)
 
 
 
@@ -67,7 +64,6 @@ export default class Overview extends Controller {
         } else if(selectedvalue.mProperties.key === "user"){
             
             const user: any = await this.getIASUser(userID);
-            console.log(user);
             if(user.length === 0){
                 MessageToast.show("User with id " + userID + " not found.");
                 grouppanel.setVisible(false);
@@ -100,113 +96,110 @@ export default class Overview extends Controller {
 
 
     }
-}
-
-
-public async getGroupRoles(groupName: string){
-    const roleCollectionsData = await this.getRoleCollections();
-    const roleCollections = roleCollectionsData?.value || [];
-    const matchedRoles: string[] = [];
-
-    roleCollections.forEach((roleCollection: any) => {
-        if (!roleCollection.groupReferences && !roleCollection.samlAttributeAssignment) {
-            return;
-        }
-        const roleGroups = [
-            ...(roleCollection.groupReferences || []).map((grp: any) => grp.attributeValue),
-            ...(roleCollection.samlAttributeAssignment || []).map((saml: any) => saml.attributeValue)
-        ];
-
-        if (roleGroups.includes(groupName)) {
-            matchedRoles.push(roleCollection.name);
-        }
-    });
-    console.log(matchedRoles)
-    return matchedRoles;
-}
-
-
-public async getGroup(id: string){
-    try {
-
-        const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
-        const oBinding = oModel.bindContext(`/getGroups(...)`, undefined, {});
-        oBinding.setParameter("GroupID", id);
-
-        const data = await oBinding.execute()
-            .then(() => {
-                const oContext = oBinding.getBoundContext();
-                if (!oContext) {
-                    return;
-                }
-                const group = oContext.getObject();
-                return group;
-            })
-            .catch((oError: any) => {
-                console.error("Error fetching Group:", oError);
-                
-            });
-
-        return data;
-
-
-    } catch (error) {
-        console.error("Error:", error);
     }
-}
 
 
-public setDataToTree(data: any) {
-    const treeformat = Object.entries(data).map(([groupName, roleCollections]) => ({
-        name: groupName,
-        icon: "sap-icon://group", 
-        children: Object.entries(roleCollections as Record<string, string[]>).map(([roleCollectionName, roles]) => ({
-            name: roleCollectionName,
-            icon: "sap-icon://manager",  
-            children: (roles || []).map((role: string) => ({ 
-                name: role,
-                icon: "sap-icon://role"  
+    public async getGroupRoles(groupName: string){
+        const roleCollectionsData = await this.getRoleCollections();
+        const roleCollections = roleCollectionsData?.value || [];
+        const matchedRoles: string[] = [];
+
+        roleCollections.forEach((roleCollection: any) => {
+            if (!roleCollection.groupReferences && !roleCollection.samlAttributeAssignment) {
+                return;
+            }
+            const roleGroups = [
+                ...(roleCollection.groupReferences || []).map((grp: any) => grp.attributeValue),
+                ...(roleCollection.samlAttributeAssignment || []).map((saml: any) => saml.attributeValue)
+            ];
+
+            if (roleGroups.includes(groupName)) {
+                matchedRoles.push(roleCollection.name);
+            }
+        });
+        return matchedRoles;
+    }
+
+
+    public async getGroup(id: string){
+        try {
+
+            const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
+            const oBinding = oModel.bindContext(`/getGroups(...)`, undefined, {});
+            oBinding.setParameter("GroupID", id);
+
+            const data = await oBinding.execute()
+                .then(() => {
+                    const oContext = oBinding.getBoundContext();
+                    if (!oContext) {
+                        return;
+                    }
+                    const group = oContext.getObject();
+                    return group;
+                })
+                .catch((oError: any) => {
+                    console.error("Error fetching Group:", oError);
+                    
+                });
+
+            return data;
+
+
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    }
+
+
+    public setDataToTree(data: any) {
+        const treeformat = Object.entries(data).map(([groupName, roleCollections]) => ({
+            name: groupName,
+            icon: "sap-icon://group", 
+            children: Object.entries(roleCollections as Record<string, string[]>).map(([roleCollectionName, roles]) => ({
+                name: roleCollectionName,
+                icon: "sap-icon://manager",  
+                children: (roles || []).map((role: string) => ({ 
+                    name: role,
+                    icon: "sap-icon://role"  
+                }))
             }))
-        }))
-    }));
-    
-    this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel");
-}
-
-public setDataToTree2(data: Record<string, string[]>) {
-    const treeformat = Object.entries(data).map(([roleCollectionName, roles]) => ({
-        name: roleCollectionName,
-        icon: "sap-icon://manager",
-        children: roles.map((role: string) => ({
-            name: role,
-            icon: "sap-icon://role"
-        }))
-    }));
-
-    this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel2");
-}
-
-
-
-public setUserDetails(userdata: any) {
-    let oModel = this.getView()?.getModel("userModel") as JSONModel;
-    if (!oModel) {
-        oModel = new JSONModel();
-        this.getView()?.setModel(oModel, "userModel");
+        }));
+        
+        this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel");
     }
-    oModel.setData(userdata);
-}
 
-public setGroupDetails(groupdata: any) {
-    let oModel = this.getView()?.getModel("groupModel") as JSONModel;
-    if (!oModel) {
-        oModel = new JSONModel();
-        this.getView()?.setModel(oModel, "groupModel");
+    public setDataToTree2(data: Record<string, string[]>) {
+        const treeformat = Object.entries(data).map(([roleCollectionName, roles]) => ({
+            name: roleCollectionName,
+            icon: "sap-icon://manager",
+            children: roles.map((role: string) => ({
+                name: role,
+                icon: "sap-icon://role"
+            }))
+        }));
+
+        this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel2");
     }
-    oModel.setData(groupdata);
-}
 
 
+
+    public setUserDetails(userdata: any) {
+        let oModel = this.getView()?.getModel("userModel") as JSONModel;
+        if (!oModel) {
+            oModel = new JSONModel();
+            this.getView()?.setModel(oModel, "userModel");
+        }
+        oModel.setData(userdata);
+    }
+
+    public setGroupDetails(groupdata: any) {
+        let oModel = this.getView()?.getModel("groupModel") as JSONModel;
+        if (!oModel) {
+            oModel = new JSONModel();
+            this.getView()?.setModel(oModel, "groupModel");
+        }
+        oModel.setData(groupdata);
+    }
 
 
     public async getUserCollectionsViaGroup(user: any) {
@@ -259,7 +252,7 @@ public setGroupDetails(groupdata: any) {
             return data;
                 
 
-    
+
         } catch (error) {
             console.error("Error :", error);
         }
@@ -297,13 +290,9 @@ public setGroupDetails(groupdata: any) {
 
     public async getRolecollectionRoles(roleCollection: string){
         try {
-
-
-
             const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
             const oBinding = oModel.bindContext(`/getRoleCollectionRoles(...)`, undefined, {});
             oBinding.setParameter("roleCollectionName", roleCollection);
-
             const data = oBinding.execute()
                 .then(() => {
                     const oContext = oBinding.getBoundContext();
@@ -316,17 +305,13 @@ public setGroupDetails(groupdata: any) {
                 .catch((oError: any) => {
                     console.error("Error fetching role collecton roles:", oError);
                 });
-
             return data;
-
-
         } catch (error) {
             console.error("Error:", error);
         }
     }
 
     onSearch(event: sap.ui.base.Event): void {
-        
         const searchword: string = event.getParameter("newValue")?.toLowerCase() || "";
         const tree = this.byId("RoleTree") as sap.m.Tree;
         tree.expandToLevel(999); 
@@ -337,7 +322,6 @@ public setGroupDetails(groupdata: any) {
             items.forEach((item: any) => item.setHighlight("None"));
             return;
         }
-
         items.forEach((item: any) => {
             const context = item.getBindingContext("TreeModel");
             if (context) {
@@ -356,18 +340,15 @@ public setGroupDetails(groupdata: any) {
     }
 
     onSearch2(event: sap.ui.base.Event): void {
-        
         const searchword: string = event.getParameter("newValue")?.toLowerCase() || "";
         const tree = this.byId("RoleTree2") as sap.m.Tree;
         tree.expandToLevel(999); 
-
         const items = tree.getItems();
         if (!tree) return;
         if (!searchword) {
             items.forEach((item: any) => item.setHighlight("None"));
             return;
         }
-
         items.forEach((item: any) => {
             const context = item.getBindingContext("TreeModel2");
             if (context) {
@@ -385,7 +366,7 @@ public setGroupDetails(groupdata: any) {
         });
     }
 
-    
+
 
 
 }

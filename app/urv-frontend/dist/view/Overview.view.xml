@@ -1,15 +1,27 @@
-<mvc:View controllerName="urvfrontend.controller.Overview"
+<mvc:View xmlns:smarttable="sap.ui.comp.smarttable" controllerName="urvfrontend.controller.Overview"
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns="sap.m">
-    <Page id="page" title="{i18n>title}">
+    xmlns="sap.m"
+        xmlns:core="sap.ui.core">
 
-    <Input id="UserID" placeholder="User ID"></Input>
-    <Button id="userButton" text="Get User Info" type="Emphasized" press="getUser"></Button>
+    <Page id="page" title="URV Application tool">
+    <FlexBox direction="Row" alignItems="Center" width="100%" >
+        <Input id="UserID" placeholder="User ID" />
+        <Select id="select" >
+            <items>
+                <core:Item key="user" text="Search by UserID" />
+                <core:Item key="group" text="Search by group" />
+                
+            </items>
+        </Select>
+    </FlexBox>
+    <Button id="userButton" text="Search" type="Emphasized" press="getUser"></Button>
 
-    <Panel id="userdetails">
+
+<Panel id="byUserId" visible="false">
+    <Panel id="userdetails" headerText="User details">
         <content>
             <VBox class="sapUiSmallMargin">
-                <Text text="User ID: {userModel>/urn:ietf:params:scim:schemas:extension:sap:2.0:User/id}" />
+                <Text text="User ID: {userModel>/id}" />
                 <Text text="Name: {userModel>/name/givenName} {userModel>/name/familyName}" />
                 <Text text="Email: {userModel>/emails/0/value}" />
                 <Text text="User Type: {userModel>/userType}" />
@@ -18,7 +30,7 @@
         </content>
     </Panel>
 
-    <Panel id="groups">
+    <Panel id="groups" headerText="Groups">
         <SearchField 
             width="100%" 
             placeholder="Search in groups..." 
@@ -27,5 +39,49 @@
             <StandardTreeItem title="{TreeModel>name}" icon="{TreeModel>icon}" />
         </Tree>
     </Panel>
+</Panel>
+
+
+<Panel id="bygroup" visible="false">
+    <Panel id="groupdetails" headerText="Group details">
+        <content >
+            <VBox class="sapUiSmallMargin" >
+                <Text text="Display name: {groupModel>/displayName}" />
+                <Text text="id: {groupModel>/id}" />
+            </VBox>
+        </content>
+        <Table id="groupMembersTable" items="{groupMembersModel>/members}" headerText="Group members">
+            <columns>
+                <Column>
+                    <Text text="User ID"/>
+                </Column>
+                <Column>
+                    <Text text="Display Name"/>
+                </Column>
+            </columns>
+            <items>
+                <ColumnListItem>
+                    <cells>
+                        <Text text="{groupMembersModel>value}"/>
+                        <Text text="{groupMembersModel>display}"/>
+                    </cells>
+                </ColumnListItem>
+            </items>
+        </Table>
+    </Panel>
+
+    <Panel id="rolecollections" headerText="RoleCollections">
+        <SearchField 
+            width="100%" 
+            placeholder="Search in groups..." 
+            liveChange=".onSearch2" />
+        <Tree id="RoleTree2" items="{TreeModel2>/tree}" mode="None">
+            <StandardTreeItem title="{TreeModel2>name}" icon="{TreeModel2>icon}" />
+        </Tree>
+    </Panel>
+
+</Panel>
+    
     </Page>
+    
 </mvc:View>

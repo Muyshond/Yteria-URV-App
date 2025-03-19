@@ -18,10 +18,10 @@
 
 
 <Panel id="byUserId" visible="false">
-    <Panel id="userdetails">
+    <Panel id="userdetails" headerText="User details">
         <content>
             <VBox class="sapUiSmallMargin">
-                <Text text="User ID: {userModel>/urn:ietf:params:scim:schemas:extension:sap:2.0:User/id}" />
+                <Text text="User ID: {userModel>/id}" />
                 <Text text="Name: {userModel>/name/givenName} {userModel>/name/familyName}" />
                 <Text text="Email: {userModel>/emails/0/value}" />
                 <Text text="User Type: {userModel>/userType}" />
@@ -30,7 +30,7 @@
         </content>
     </Panel>
 
-    <Panel id="groups">
+    <Panel id="groups" headerText="Groups">
         <SearchField 
             width="100%" 
             placeholder="Search in groups..." 
@@ -43,7 +43,7 @@
 
 
 <Panel id="bygroup" visible="false">
-    <Panel id="groupdetails">
+    <Panel id="groupdetails" headerText="Group details">
         <content >
             <VBox class="sapUiSmallMargin" >
                 <Text text="Display name: {groupModel>/displayName}" />
@@ -70,7 +70,7 @@
         </Table>
     </Panel>
 
-    <Panel id="rolecollections">
+    <Panel id="rolecollections" headerText="RoleCollections">
         <SearchField 
             width="100%" 
             placeholder="Search in groups..." 

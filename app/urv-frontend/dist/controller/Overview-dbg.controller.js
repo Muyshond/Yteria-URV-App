@@ -9,55 +9,112 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
   const Overview = Controller.extend("urvfrontend.controller.Overview", {
     /*eslint-disable @typescript-eslint/no-empty-function*/onInit: function _onInit() {},
     getUser: async function _getUser() {
-      //delete na testen
-      // const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
-      // const oBinding = oModel.bindContext("/getIASUsers(...)", undefined, {});
-
-      // oBinding.execute()
-      //     .then(() => {
-      //         const oContext = oBinding.getBoundContext();
-      //         if (!oContext) {
-      //             console.error("Function execution returned an undefined context!");
-      //             return;
-      //         }
-      //         const aUsers = oContext.getObject();
-      //     })
-      //     .catch((oError: any) => {
-      //         console.error("Error fetching IAS Users:", oError);
-      // });
-
+      const userpanel = this.getView()?.byId("byUserId");
+      const grouppanel = this.getView()?.byId("bygroup");
       const userInput = this.getView()?.byId("UserID");
       const userID = userInput.getValue();
       if (userID === "") {
         MessageToast.show("Please enter a valid ID");
         return;
       }
-      const user = await this.getIASUser(userID);
-      const userdata = user[0];
-      //const userGroups = userdata.groups.map((group: any) => group.display); //groups deftig zetten 
-      //this.getRolecollectionRoles("AuthGroup.Content.Admin") //test (delete erna)
-      this.setUserDetails(userdata);
-      const grouprolerelationship = await this.getUserCollectionsViaGroup(userdata);
-      const formattedData = Object.entries(grouprolerelationship).map(_ref => {
-        let [group, value] = _ref;
-        return {
-          group,
-          roleCollections: value
-        };
-      });
-      const result = {};
-      for (const {
-        group,
-        roleCollections
-      } of formattedData) {
-        result[group] = {};
-        for (const roleCollection of roleCollections) {
+      const selectinput = this.getView()?.byId("select");
+      const selectedvalue = selectinput.getSelectedItem();
+      //ZOEK OP GROUP
+      if (selectedvalue.mProperties.key === "group") {
+        const group = await this.getGroup(userID);
+        if (group.value[0] === "error fetching group") {
+          MessageToast.show("Could not find Group with id " + userID);
+          return;
+        }
+        this.setGroupDetails(group.value[0]);
+        const members = group.value[0].members;
+        if (members.length !== 0) {
+          const oJSONModel = new JSONModel({
+            members
+          });
+          this.getView()?.setModel(oJSONModel, "groupMembersModel");
+        }
+        const result = {};
+        const rolecolltions = await this.getGroupRoles(group.value[0].displayName);
+        for (const roleCollection of rolecolltions) {
           const response = await this.getRolecollectionRoles(roleCollection);
           const roleCollectionData = response?.value?.[0];
           const roles = roleCollectionData?.roleReferences?.map(role => role.name) || [];
-          result[group][roleCollection] = roles;
+          result[roleCollection] = roles;
         }
-        this.setDataToTree(result);
+        this.setDataToTree2(result);
+        grouppanel.setVisible(true);
+        userpanel.setVisible(false);
+        //ZOEK OP USER
+      } else if (selectedvalue.mProperties.key === "user") {
+        const user = await this.getIASUser(userID);
+        if (user.length === 0) {
+          MessageToast.show("User with id " + userID + " not found.");
+          grouppanel.setVisible(false);
+          userpanel.setVisible(false);
+          return;
+        }
+        const userdata = user[0];
+        this.setUserDetails(userdata);
+        const grouprolerelationship = await this.getUserCollectionsViaGroup(userdata);
+        const formattedData = Object.entries(grouprolerelationship).map(_ref => {
+          let [group, value] = _ref;
+          return {
+            group,
+            roleCollections: value
+          };
+        });
+        const result = {};
+        for (const {
+          group,
+          roleCollections
+        } of formattedData) {
+          result[group] = {};
+          for (const roleCollection of roleCollections) {
+            const response = await this.getRolecollectionRoles(roleCollection);
+            const roleCollectionData = response?.value?.[0];
+            const roles = roleCollectionData?.roleReferences?.map(role => role.name) || [];
+            result[group][roleCollection] = roles;
+          }
+          this.setDataToTree(result);
+          grouppanel.setVisible(false);
+          userpanel.setVisible(true);
+        }
+      }
+    },
+    getGroupRoles: async function _getGroupRoles(groupName) {
+      const roleCollectionsData = await this.getRoleCollections();
+      const roleCollections = roleCollectionsData?.value || [];
+      const matchedRoles = [];
+      roleCollections.forEach(roleCollection => {
+        if (!roleCollection.groupReferences && !roleCollection.samlAttributeAssignment) {
+          return;
+        }
+        const roleGroups = [...(roleCollection.groupReferences || []).map(grp => grp.attributeValue), ...(roleCollection.samlAttributeAssignment || []).map(saml => saml.attributeValue)];
+        if (roleGroups.includes(groupName)) {
+          matchedRoles.push(roleCollection.name);
+        }
+      });
+      return matchedRoles;
+    },
+    getGroup: async function _getGroup(id) {
+      try {
+        const oModel = this.getView()?.getModel();
+        const oBinding = oModel.bindContext(`/getGroups(...)`, undefined, {});
+        oBinding.setParameter("GroupID", id);
+        const data = await oBinding.execute().then(() => {
+          const oContext = oBinding.getBoundContext();
+          if (!oContext) {
+            return;
+          }
+          const group = oContext.getObject();
+          return group;
+        }).catch(oError => {
+          console.error("Error fetching Group:", oError);
+        });
+        return data;
+      } catch (error) {
+        console.error("Error:", error);
       }
     },
     setDataToTree: function _setDataToTree(data) {
@@ -83,6 +140,22 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
         tree: treeformat
       }), "TreeModel");
     },
+    setDataToTree2: function _setDataToTree2(data) {
+      const treeformat = Object.entries(data).map(_ref4 => {
+        let [roleCollectionName, roles] = _ref4;
+        return {
+          name: roleCollectionName,
+          icon: "sap-icon://manager",
+          children: roles.map(role => ({
+            name: role,
+            icon: "sap-icon://role"
+          }))
+        };
+      });
+      this.getView()?.setModel(new JSONModel({
+        tree: treeformat
+      }), "TreeModel2");
+    },
     setUserDetails: function _setUserDetails(userdata) {
       let oModel = this.getView()?.getModel("userModel");
       if (!oModel) {
@@ -90,6 +163,14 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
         this.getView()?.setModel(oModel, "userModel");
       }
       oModel.setData(userdata);
+    },
+    setGroupDetails: function _setGroupDetails(groupdata) {
+      let oModel = this.getView()?.getModel("groupModel");
+      if (!oModel) {
+        oModel = new JSONModel();
+        this.getView()?.setModel(oModel, "groupModel");
+      }
+      oModel.setData(groupdata);
     },
     getUserCollectionsViaGroup: async function _getUserCollectionsViaGroup(user) {
       const userGroups = user.groups.map(group => group.display);
@@ -128,38 +209,12 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
           console.error("Error fetching IAS User:", oError);
         });
         return data;
-
-        // const model = this.getOwnerComponent()?.getModel() as ODataModel;
-        // const bookBinding = model.getKeepAliveContext(`/getIASUser(id='${userid}')`);
-
-        // const response = await fetch(`/odata/v4/catalog/getIASUser(id='${userid}')`);
-
-        // const data = await response.json();
-        // return data;
       } catch (error) {
         console.error("Error :", error);
       }
     },
-    // public async getUsers() {
-    //     try {
-    //         const response = await fetch("/odata/v4/catalog/getIASUsers");
-    //         if (!response.ok) {
-    //             throw new Error(`Error: ${response.status}`);
-    //         }
-    //         const data = await response.json();
-    //     } catch (error) {
-    //         console.error("Error:", error);
-    //     }
-    // } 
     getRoleCollections: async function _getRoleCollections() {
       try {
-        // const response = await fetch("/odata/v4/catalog/getRoleCollections");
-        // if (!response.ok) {
-        //     throw new Error(`Error: ${response.status}`);
-        // }
-        // const data = await response.json();
-        // return data;
-
         const oModel = this.getView()?.getModel();
         const oBinding = oModel.bindContext(`/getRoleCollections(...)`, undefined, {});
         const data = oBinding.execute().then(() => {
@@ -179,13 +234,6 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
     },
     getRolecollectionRoles: async function _getRolecollectionRoles(roleCollection) {
       try {
-        // const response = await fetch(`/odata/v4/catalog/getRoleCollectionRoles(roleCollectionName='${roleCollection}')`);
-        // if (!response.ok) {
-        //     throw new Error(`Error: ${response.status}`);
-        // }
-        // const data = await response.json();
-        // return data;
-
         const oModel = this.getView()?.getModel();
         const oBinding = oModel.bindContext(`/getRoleCollectionRoles(...)`, undefined, {});
         oBinding.setParameter("roleCollectionName", roleCollection);
@@ -216,6 +264,31 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
       }
       items.forEach(item => {
         const context = item.getBindingContext("TreeModel");
+        if (context) {
+          const index = tree.indexOfItem(item);
+          const name = context.getProperty("name").toLowerCase();
+          if (name.includes(searchword)) {
+            console.log(name + searchword);
+            item.setHighlight("Success");
+          } else {
+            item.setHighlight("None");
+            //tree.collapse(index);
+          }
+        }
+      });
+    },
+    onSearch2: function _onSearch2(event) {
+      const searchword = event.getParameter("newValue")?.toLowerCase() || "";
+      const tree = this.byId("RoleTree2");
+      tree.expandToLevel(999);
+      const items = tree.getItems();
+      if (!tree) return;
+      if (!searchword) {
+        items.forEach(item => item.setHighlight("None"));
+        return;
+      }
+      items.forEach(item => {
+        const context = item.getBindingContext("TreeModel2");
         if (context) {
           const index = tree.indexOfItem(item);
           const name = context.getProperty("name").toLowerCase();
