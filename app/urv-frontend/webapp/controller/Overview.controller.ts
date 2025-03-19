@@ -31,7 +31,8 @@ export default class Overview extends Controller {
         }
         const selectinput = this.getView()?.byId("select") as sap.m.select;
         const selectedvalue = selectinput.getSelectedItem();
-        console.log(selectedvalue.mProperties.key)
+        console.log(selectedvalue.mProperties.key);
+        //ZOEK OP GROUP
         if(selectedvalue.mProperties.key === "group"){
 
 
@@ -41,8 +42,9 @@ export default class Overview extends Controller {
 
             grouppanel.setVisible(true);
             userpanel.setVisible(false);
+        //ZOEK OP USER
         } else if(selectedvalue.mProperties.key === "user"){
-
+            
             const user: any = await this.getIASUser(userID);
             console.log(user);
             if(user.length === 0){

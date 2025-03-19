@@ -29,6 +29,10 @@ service CatalogService {
 
     function getRoleCollectionRoles(roleCollectionName: String) returns array of {
         
+    };
+
+    function getGroups(GroupID: String) returns array of {
+        
     }
     
 }

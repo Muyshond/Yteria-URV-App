@@ -8,17 +8,22 @@ module.exports = cds.service.impl(async function () {
     const clientsecret = "doLAg_EfYVOss].suaSs=WmNo=BrQbQk"
 
 
-    this.on('getIASUsers', async (req) => {
-        const authHeader = "Basic " + Buffer.from(clientid + ":" + clientsecret).toString("base64");
+    this.on('getIASUsers', async (req) => {7
+        try{
+            const authHeader = "Basic " + Buffer.from(clientid + ":" + clientsecret).toString("base64");
 
-        const response = await fetch(url, {
-            method: "GET",
-            headers: {
-                "Authorization": authHeader
-            }
-        })
-        const data = await response.json();
-        return data
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Authorization": authHeader
+                }
+            })
+            const data = await response.json();
+            return data;
+        }catch(error){
+            return "error fetching user"
+        }
+        
     });
 
 
@@ -142,7 +147,30 @@ module.exports = cds.service.impl(async function () {
             console.error("Error fetching JWT:", error);
             throw error; 
         }
-    }
+    };
+
+
+    this.on('getGroups', async (req) => {
+        try{
+            const id = req.data.GroupID
+
+            const groupurl = `https://adruyadgk.trial-accounts.ondemand.com/service/scim/Groups/${id}`;
+    
+            const authHeader = "Basic " + Buffer.from(clientid + ":" + clientsecret).toString("base64");
+    
+            const response = await fetch(groupurl, {
+                method: "GET",
+                headers: {
+                    "Authorization": authHeader
+                }
+            })
+            const data = await response.json();
+            return data
+        } catch(error){
+            return "error fetching group ";
+        }
+        
+    });
 
 
 
