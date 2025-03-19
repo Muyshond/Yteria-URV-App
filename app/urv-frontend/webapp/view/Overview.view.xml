@@ -1,4 +1,4 @@
-<mvc:View controllerName="urvfrontend.controller.Overview"
+<mvc:View xmlns:smarttable="sap.ui.comp.smarttable" controllerName="urvfrontend.controller.Overview"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
         xmlns:core="sap.ui.core">
@@ -43,7 +43,43 @@
 
 
 <Panel id="bygroup" visible="false">
-    
+    <Panel id="groupdetails">
+        <content >
+            <VBox class="sapUiSmallMargin" >
+                <Text text="Display name: {groupModel>/displayName}" />
+                <Text text="id: {groupModel>/id}" />
+            </VBox>
+        </content>
+        <Table id="groupMembersTable" items="{groupMembersModel>/members}" headerText="Group members">
+            <columns>
+                <Column>
+                    <Text text="User ID"/>
+                </Column>
+                <Column>
+                    <Text text="Display Name"/>
+                </Column>
+            </columns>
+            <items>
+                <ColumnListItem>
+                    <cells>
+                        <Text text="{groupMembersModel>value}"/>
+                        <Text text="{groupMembersModel>display}"/>
+                    </cells>
+                </ColumnListItem>
+            </items>
+        </Table>
+    </Panel>
+
+    <Panel id="rolecollections">
+        <SearchField 
+            width="100%" 
+            placeholder="Search in groups..." 
+            liveChange=".onSearch2" />
+        <Tree id="RoleTree2" items="{TreeModel2>/tree}" mode="None">
+            <StandardTreeItem title="{TreeModel2>name}" icon="{TreeModel2>icon}" />
+        </Tree>
+    </Panel>
+
 </Panel>
     
     </Page>

@@ -153,7 +153,6 @@ module.exports = cds.service.impl(async function () {
     this.on('getGroups', async (req) => {
         try{
             const id = req.data.GroupID
-
             const groupurl = `https://adruyadgk.trial-accounts.ondemand.com/service/scim/Groups/${id}`;
     
             const authHeader = "Basic " + Buffer.from(clientid + ":" + clientsecret).toString("base64");
@@ -165,9 +164,9 @@ module.exports = cds.service.impl(async function () {
                 }
             })
             const data = await response.json();
-            return data
+            return data;
         } catch(error){
-            return "error fetching group ";
+            return "error fetching group"; 
         }
         
     });

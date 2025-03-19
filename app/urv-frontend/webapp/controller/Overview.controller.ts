@@ -22,6 +22,7 @@ export default class Overview extends Controller {
     public async getUser() {
         const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
         const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
+       
 
         const userInput = this.getView()?.byId("UserID") as sap.m.Input;
         const userID = userInput.getValue();
@@ -34,12 +35,32 @@ export default class Overview extends Controller {
         console.log(selectedvalue.mProperties.key);
         //ZOEK OP GROUP
         if(selectedvalue.mProperties.key === "group"){
+            const group = await this.getGroup(userID);
+            if(group.value[0] === "error fetching group"){
+                MessageToast.show("Could not find Group with id " + userID);
+                return;
+            }
+            console.log(group)
+            this.setGroupDetails(group.value[0]);
+            const members = group.value[0].members;
+            if(members.length  !== 0){
+                const oJSONModel = new JSONModel({ members });
+                this.getView()?.setModel(oJSONModel, "groupMembersModel");
+            }
+            const result: any = {}
+            const rolecolltions = await this.getGroupRoles(group.value[0].displayName);
+            for (const roleCollection of rolecolltions) {
+                const response = await this.getRolecollectionRoles(roleCollection); 
+                const roleCollectionData = response?.value?.[0]; 
+                const roles = roleCollectionData?.roleReferences?.map((role: any) => role.name) || [];
+
+                result[roleCollection] = roles;
+            }   
+            console.log(result)
 
 
 
-
-
-
+            this.setDataToTree2(result);
             grouppanel.setVisible(true);
             userpanel.setVisible(false);
         //ZOEK OP USER
@@ -82,6 +103,58 @@ export default class Overview extends Controller {
 }
 
 
+public async getGroupRoles(groupName: string){
+    const roleCollectionsData = await this.getRoleCollections();
+    const roleCollections = roleCollectionsData?.value || [];
+    const matchedRoles: string[] = [];
+
+    roleCollections.forEach((roleCollection: any) => {
+        if (!roleCollection.groupReferences && !roleCollection.samlAttributeAssignment) {
+            return;
+        }
+        const roleGroups = [
+            ...(roleCollection.groupReferences || []).map((grp: any) => grp.attributeValue),
+            ...(roleCollection.samlAttributeAssignment || []).map((saml: any) => saml.attributeValue)
+        ];
+
+        if (roleGroups.includes(groupName)) {
+            matchedRoles.push(roleCollection.name);
+        }
+    });
+    console.log(matchedRoles)
+    return matchedRoles;
+}
+
+
+public async getGroup(id: string){
+    try {
+
+        const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
+        const oBinding = oModel.bindContext(`/getGroups(...)`, undefined, {});
+        oBinding.setParameter("GroupID", id);
+
+        const data = await oBinding.execute()
+            .then(() => {
+                const oContext = oBinding.getBoundContext();
+                if (!oContext) {
+                    return;
+                }
+                const group = oContext.getObject();
+                return group;
+            })
+            .catch((oError: any) => {
+                console.error("Error fetching Group:", oError);
+                
+            });
+
+        return data;
+
+
+    } catch (error) {
+        console.error("Error:", error);
+    }
+}
+
 
 public setDataToTree(data: any) {
     const treeformat = Object.entries(data).map(([groupName, roleCollections]) => ({
@@ -100,16 +173,39 @@ public setDataToTree(data: any) {
     this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel");
 }
 
+public setDataToTree2(data: Record<string, string[]>) {
+    const treeformat = Object.entries(data).map(([roleCollectionName, roles]) => ({
+        name: roleCollectionName,
+        icon: "sap-icon://manager",
+        children: roles.map((role: string) => ({
+            name: role,
+            icon: "sap-icon://role"
+        }))
+    }));
+
+    this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel2");
+}
 
 
-    public setUserDetails(userdata: any) {
-        let oModel = this.getView()?.getModel("userModel") as JSONModel;
-        if (!oModel) {
-            oModel = new JSONModel();
-            this.getView()?.setModel(oModel, "userModel");
-        }
-        oModel.setData(userdata);
+
+public setUserDetails(userdata: any) {
+    let oModel = this.getView()?.getModel("userModel") as JSONModel;
+    if (!oModel) {
+        oModel = new JSONModel();
+        this.getView()?.setModel(oModel, "userModel");
     }
+    oModel.setData(userdata);
+}
+
+public setGroupDetails(groupdata: any) {
+    let oModel = this.getView()?.getModel("groupModel") as JSONModel;
+    if (!oModel) {
+        oModel = new JSONModel();
+        this.getView()?.setModel(oModel, "groupModel");
+    }
+    oModel.setData(groupdata);
+}
+
 
 
 
@@ -244,6 +340,36 @@ public setDataToTree(data: any) {
 
         items.forEach((item: any) => {
             const context = item.getBindingContext("TreeModel");
+            if (context) {
+                const index = tree.indexOfItem(item);
+                const name: string = context.getProperty("name").toLowerCase();
+                if (name.includes(searchword)) {
+                    console.log(name + searchword)
+                    item.setHighlight("Success")  
+                }else{
+
+                    item.setHighlight("None");
+                    //tree.collapse(index);
+                }
+            }
+        });
+    }
+
+    onSearch2(event: sap.ui.base.Event): void {
+        
+        const searchword: string = event.getParameter("newValue")?.toLowerCase() || "";
+        const tree = this.byId("RoleTree2") as sap.m.Tree;
+        tree.expandToLevel(999); 
+
+        const items = tree.getItems();
+        if (!tree) return;
+        if (!searchword) {
+            items.forEach((item: any) => item.setHighlight("None"));
+            return;
+        }
+
+        items.forEach((item: any) => {
+            const context = item.getBindingContext("TreeModel2");
             if (context) {
                 const index = tree.indexOfItem(item);
                 const name: string = context.getProperty("name").toLowerCase();
