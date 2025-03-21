@@ -3,13 +3,13 @@
     xmlns="sap.m"
         xmlns:core="sap.ui.core">
 
-    <Page id="page" title="URV Application tool">
-    <FlexBox direction="Row" alignItems="Center" width="100%" >
+    <Page id="page" title="URV TOOL">
+    <FlexBox direction="Row" alignItems="Center"  >
         <Input id="UserID" placeholder="User ID" />
         <Select id="select" >
             <items>
-                <core:Item key="user" text="Search by UserID" />
-                <core:Item key="group" text="Search by group" />
+                <core:ListItem key="user" text="Search by UserID" icon="sap-icon://person-placeholder"/>
+                <core:ListItem key="group" text="Search by group" icon="sap-icon://group"/>
                 
             </items>
         </Select>

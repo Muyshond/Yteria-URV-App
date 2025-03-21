@@ -33,6 +33,10 @@ service CatalogService {
 
     function getGroups(GroupID: String) returns array of {
         
+    };
+
+    function getGroupByName(GroupName: String) returns array of{
+
     }
     
 }
