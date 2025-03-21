@@ -41,9 +41,32 @@
     </Panel>
 </Panel>
 
+<Panel id="grouptable" visible="false" headerText="Select a Group">
+    <VBox>
+        <Table id="groupsTable2" items="{tablegroups>/value}" 
+               mode="SingleSelectMaster" 
+               itemPress="onGroupPress">
+            <columns>
+                <Column>
+                    <Text text="Group Name" />
+                </Column>
+            </columns>
+            <items>
+                <ColumnListItem type="Active">
+                    <cells>
+                        <Text text="{tablegroups>displayName}" />
+                    </cells>
+                </ColumnListItem>
+            </items>
+        </Table>
+    </VBox>
+</Panel>
+
 
 <Panel id="bygroup" visible="false">
     <Panel id="groupdetails" headerText="Group details">
+
+        
         <content >
             <VBox class="sapUiSmallMargin" >
                 <Text text="Display name: {groupModel>/displayName}" />

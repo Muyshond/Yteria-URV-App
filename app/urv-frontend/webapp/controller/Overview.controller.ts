@@ -22,7 +22,7 @@ export default class Overview extends Controller {
     public async getUser() {
         const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
         const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
-       
+        const grouptable = this.getView()?.byId("grouptable") as sap.m.panel;
 
         const userInput = this.getView()?.byId("UserID") as sap.m.Input;
         const userID = userInput.getValue();
@@ -34,40 +34,35 @@ export default class Overview extends Controller {
         const selectedvalue = selectinput.getSelectedItem();
         //ZOEK OP GROUP
         if(selectedvalue.mProperties.key === "group"){
-            const group = await this.getGroup(userID);
-            console.log(group)
-            if(group.value[0] === "Group not found"){
-                MessageToast.show("Could not find Group with id " + userID);
+            const groups = await this.getGroupByWord(userID);
+            console.log(groups.value.length)
+            if(groups.value.length === 0){
+                MessageToast.show("There are no groups that include " + userID);
+                grouppanel.setVisible(false);
+                grouptable.setVisible(false);
+                userpanel.setVisible(false);
+                return;
+            } else if(groups.value.length > 1 ){
+                grouptable.setVisible(true);
+                const oJSONModel = new JSONModel({ value: groups.value });
+                this.getView().setModel(oJSONModel, "tablegroups");
+
+
+            } else if(groups.value.length === 1){
+                this.setGroup(userID);
+                grouptable.setVisible(false);
                 return;
             }
-            this.setGroupDetails(group.value[0]);
-            const members = group.value[0].members;
-            if(members !== undefined){
-                const oJSONModel = new JSONModel({ members });
-                this.getView()?.setModel(oJSONModel, "groupMembersModel");
-                
-            }
-            const result: any = {}
-            const rolecolltions = await this.getGroupRoles(group.value[0].displayName);
-            for (const roleCollection of rolecolltions) {
-                const response = await this.getRolecollectionRoles(roleCollection); 
-                const roleCollectionData = response?.value?.[0]; 
-                const roles = roleCollectionData?.roleReferences?.map((role: any) => role.name) || [];
 
-                result[roleCollection] = roles;
-            }   
-
-
-
-            this.setDataToTree2(result);
-            grouppanel.setVisible(true);
-            userpanel.setVisible(false);
         //ZOEK OP USER
         } else if(selectedvalue.mProperties.key === "user"){
-            
+            grouptable.setVisible(false);
+
             const user: any = await this.getIASUser(userID);
             if(user.length === 0){
                 MessageToast.show("User with id " + userID + " not found.");
+                grouppanel.setVisible(false);
+                userpanel.setVisible(false);
                 return;
             }
             const userdata = user[0]
@@ -98,6 +93,37 @@ export default class Overview extends Controller {
     }
     }
 
+
+    public async setGroup(userID: any){
+        const group = await this.getGroup(userID);
+        console.log(group)
+                const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
+        const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
+
+        this.setGroupDetails(group.value[0]);
+        const members = group.value[0].members;
+        if(members !== undefined){
+            const oJSONModel = new JSONModel({ members });
+            this.getView()?.setModel(oJSONModel, "groupMembersModel");
+            
+        }
+        const result: any = {}
+        const rolecolltions = await this.getGroupRoles(group.value[0].displayName);
+        for (const roleCollection of rolecolltions) {
+            const response = await this.getRolecollectionRoles(roleCollection); 
+            const roleCollectionData = response?.value?.[0]; 
+            const roles = roleCollectionData?.roleReferences?.map((role: any) => role.name) || [];
+
+            result[roleCollection] = roles;
+        }   
+
+
+
+        this.setDataToTree2(result);
+        grouppanel.setVisible(true);
+        userpanel.setVisible(false);
+        return;
+    }
 
     public async getGroupRoles(groupName: string){
         const roleCollectionsData = await this.getRoleCollections();
@@ -149,6 +175,37 @@ export default class Overview extends Controller {
             console.error("Error:", error);
         }
     }
+
+    public async getGroupByWord(id: string){
+        try {
+
+            const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
+            const oBinding = oModel.bindContext(`/getGroupByWord(...)`, undefined, {});
+            oBinding.setParameter("GroupName", id);
+
+            const data = await oBinding.execute()
+                .then(() => {
+                    const oContext = oBinding.getBoundContext();
+                    if (!oContext) {
+                        return;
+                    }
+                    const group = oContext.getObject();
+                    return group;
+                })
+                .catch((oError: any) => {
+                    console.error("Error fetching Group:", oError);
+                    
+                });
+
+            return data;
+
+        } catch (error) {
+            console.error("Error catching groups:", error);
+        }
+    }
+
+
+
 
 
     public setDataToTree(data: any) {
@@ -366,6 +423,19 @@ export default class Overview extends Controller {
         });
     }
 
+
+    onGroupPress(event: sap.ui.base.Event): void {
+        const oSelectedItem = event.getParameter("listItem") as ColumnListItem; 
+        const oContext = oSelectedItem.getBindingContext("tablegroups"); 
+        
+
+        const oGroupData = oContext.getObject() as { displayName: string }; 
+        const groupName = oGroupData.displayName; 
+
+        this.setGroup(groupName);
+
+        
+    }
 
 
 

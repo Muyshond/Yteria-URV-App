@@ -1,0 +1,22 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <Table id="groupsTable" items="{/tablegroups}">
+        <columns>
+            <Column>
+                <Text text="Group Name" />
+            </Column>
+            <Column>
+                <Text text="Group ID" />
+            </Column>
+            <Column>
+                <Text text="Members" />
+            </Column>
+        </columns>
+        <items>
+            <ColumnListItem>
+                <cells>
+                    <Text text="{displayName}" />
+                </cells>
+            </ColumnListItem>
+        </items>
+    </Table>
+</core:FragmentDefinition>

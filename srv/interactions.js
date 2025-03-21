@@ -205,6 +205,47 @@ module.exports = cds.service.impl(async function () {
             console.error("Error fetching IAS groups:", error);
             return "Error fetching group";
         }
+    });
+
+    this.on('getGroupByWord', async (req) => {
+        try {
+            const name = req.data.GroupName;
+            let userGroups = [];
+            let idx = 1;
+            let response;
+            console.log(`Start loading IAS UserGroups`);
+            const authHeader = "Basic " + Buffer.from(clientid + ":" + clientsecret).toString("base64");
+            do {
+                console.log(`Start loading IAS UserGroups from ${idx}`);
+                response = await fetch(`https://adruyadgk.trial-accounts.ondemand.com/service/scim/Groups?startIndex=${idx}`, {
+                    headers: {
+                        "Authorization": authHeader
+                    },
+                    method: "GET"
+                });
+    
+                const data = await response.json();
+                userGroups = [...userGroups, ...data.Resources];
+    
+                console.log(`Loading IAS UserGroups - current count ${userGroups.length}`);
+                idx += 100;
+    
+            } while (userGroups.length < response.totalResults);
+    
+            console.log(`Finished loading IAS UserGroups - count ${userGroups.length}`);
+            let includesword = []
+            userGroups.forEach(group => {
+                if (group.displayName.includes(name)) {
+                    includesword.push(group);
+                }
+            });
+            
+            return includesword;
+    
+        } catch (error) {
+            console.error("Error fetching IAS groups:", error);
+            return "Error fetching group";
+        }
     })
 
 

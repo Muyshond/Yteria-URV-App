@@ -37,6 +37,10 @@ service CatalogService {
 
     function getGroupByName(GroupName: String) returns array of{
 
+    };
+    
+    function getGroupByWord(GroupName: String) returns array of{
+
     }
     
 }

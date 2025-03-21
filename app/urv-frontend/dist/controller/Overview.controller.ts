@@ -35,15 +35,19 @@ export default class Overview extends Controller {
         //ZOEK OP GROUP
         if(selectedvalue.mProperties.key === "group"){
             const group = await this.getGroup(userID);
-            if(group.value[0] === "error fetching group"){
-                MessageToast.show("Could not find Group with id " + userID);
+            console.log(group)
+            if(group.value[0] === "Group not found"){
+                MessageToast.show("Could not find Group with name " + userID);
+                grouppanel.setVisible(false);
+                userpanel.setVisible(false);
                 return;
             }
             this.setGroupDetails(group.value[0]);
             const members = group.value[0].members;
-            if(members.length  !== 0){
+            if(members !== undefined){
                 const oJSONModel = new JSONModel({ members });
                 this.getView()?.setModel(oJSONModel, "groupMembersModel");
+                
             }
             const result: any = {}
             const rolecolltions = await this.getGroupRoles(group.value[0].displayName);
@@ -125,8 +129,8 @@ export default class Overview extends Controller {
         try {
 
             const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
-            const oBinding = oModel.bindContext(`/getGroups(...)`, undefined, {});
-            oBinding.setParameter("GroupID", id);
+            const oBinding = oModel.bindContext(`/getGroupByName(...)`, undefined, {});
+            oBinding.setParameter("GroupName", id);
 
             const data = await oBinding.execute()
                 .then(() => {

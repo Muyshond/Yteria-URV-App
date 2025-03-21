@@ -22,13 +22,16 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
       //ZOEK OP GROUP
       if (selectedvalue.mProperties.key === "group") {
         const group = await this.getGroup(userID);
-        if (group.value[0] === "error fetching group") {
-          MessageToast.show("Could not find Group with id " + userID);
+        console.log(group);
+        if (group.value[0] === "Group not found") {
+          MessageToast.show("Could not find Group with name " + userID);
+          grouppanel.setVisible(false);
+          userpanel.setVisible(false);
           return;
         }
         this.setGroupDetails(group.value[0]);
         const members = group.value[0].members;
-        if (members.length !== 0) {
+        if (members !== undefined) {
           const oJSONModel = new JSONModel({
             members
           });
@@ -100,8 +103,8 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
     getGroup: async function _getGroup(id) {
       try {
         const oModel = this.getView()?.getModel();
-        const oBinding = oModel.bindContext(`/getGroups(...)`, undefined, {});
-        oBinding.setParameter("GroupID", id);
+        const oBinding = oModel.bindContext(`/getGroupByName(...)`, undefined, {});
+        oBinding.setParameter("GroupName", id);
         const data = await oBinding.execute().then(() => {
           const oContext = oBinding.getBoundContext();
           if (!oContext) {
