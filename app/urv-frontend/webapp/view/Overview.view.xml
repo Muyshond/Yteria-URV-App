@@ -3,7 +3,7 @@
     xmlns="sap.m"
         xmlns:core="sap.ui.core">
 
-    <Page id="page" title="URV TOOL">
+<Page id="page" title="URV TOOL">
     <FlexBox direction="Row" alignItems="Center"  >
         <Input id="UserID" placeholder="User ID" />
         <Select id="select" >
@@ -14,11 +14,45 @@
             </items>
         </Select>
     </FlexBox>
-    <Button id="userButton" text="Search" type="Emphasized" press="getUser"></Button>
+    <Button id="userButton" text="Search" type="Emphasized" press="getUser" />
 
+<Panel id="usertable" visible="false" headerText="Select a user">
+    <VBox>
+        <Table id="usersTable" items="{tableusers>/value}" mode="SingleSelectMaster" itemPress="onUserPress">
+        
+            <columns>
+                <Column>
+                    <Text text="ID" />
+                </Column>
+                <Column>
+                    <Text text="First Name" />
+                </Column>
+                <Column>
+                    <Text text="Last Name" />
+                </Column>
+            </columns>
+            <items>
+                <ColumnListItem press="onUserPress" type="Active">
+                    <cells>
+                        <Text text="{tableusers>id}" />
+                        <Text text="{tableusers>name/givenName}" />
+                        <Text text="{tableusers>name/familyName}" />
+                    </cells>
+                </ColumnListItem>
+            </items>
+        </Table>
+    </VBox>
+</Panel>
 
 <Panel id="byUserId" visible="false">
     <Panel id="userdetails" headerText="User details">
+        <headerToolbar>
+            <OverflowToolbar>
+                <Title text="User details" level="H2"/>
+                <ToolbarSpacer/>
+                <Button text="Export to Excel" icon="sap-icon://excel-attachment" press="onExportUser"/>
+            </OverflowToolbar>
+        </headerToolbar>
         <content>
             <VBox class="sapUiSmallMargin">
                 <Text text="User ID: {userModel>/id}" />
@@ -43,9 +77,12 @@
 
 <Panel id="grouptable" visible="false" headerText="Select a Group">
     <VBox>
+        
+
         <Table id="groupsTable2" items="{tablegroups>/value}" 
                mode="SingleSelectMaster" 
                itemPress="onGroupPress">
+               
             <columns>
                 <Column>
                     <Text text="Group Name" />
@@ -59,13 +96,20 @@
                 </ColumnListItem>
             </items>
         </Table>
-    </VBox>
+    </VBox> 
 </Panel>
 
 
-<Panel id="bygroup" visible="false">
-    <Panel id="groupdetails" headerText="Group details">
 
+<Panel id="bygroup" visible="false" headerText="Group details">
+    <Panel id="groupdetails">
+    <headerToolbar>
+            <OverflowToolbar>
+                <Title text="User details" level="H2"/>
+                <ToolbarSpacer/>
+                <Button text="Export to Excel" icon="sap-icon://excel-attachment" press="onExportGroup"/>
+            </OverflowToolbar>
+        </headerToolbar>
         
         <content >
             <VBox class="sapUiSmallMargin" >
@@ -74,6 +118,7 @@
             </VBox>
         </content>
         <Table id="groupMembersTable" items="{groupMembersModel>/members}" headerText="Group members">
+        
             <columns>
                 <Column>
                     <Text text="User ID"/>
@@ -104,6 +149,10 @@
     </Panel>
 
 </Panel>
+
+
+
+
     
     </Page>
     

@@ -235,7 +235,7 @@ module.exports = cds.service.impl(async function () {
             console.log(`Finished loading IAS UserGroups - count ${userGroups.length}`);
             let includesword = []
             userGroups.forEach(group => {
-                if (group.displayName.includes(name)) {
+                if (group.displayName.toLowerCase().includes(name.toLowerCase())) {
                     includesword.push(group);
                 }
             });
@@ -246,7 +246,53 @@ module.exports = cds.service.impl(async function () {
             console.error("Error fetching IAS groups:", error);
             return "Error fetching group";
         }
-    })
+    });
+
+
+    this.on('getUserByWord', async (req) => {
+        try {
+            const id = req.data.id;
+            
+            let users = [];
+            let idx = 1;
+            let response;
+            console.log(`Start loading IAS UserGroups`);
+            const authHeader = "Basic " + Buffer.from(clientid + ":" + clientsecret).toString("base64");
+            do {
+                console.log(`Start loading IAS Users from ${idx}`);
+                response = await fetch(`https://adruyadgk.trial-accounts.ondemand.com/service/scim/Users?startIndex=${idx}`, {
+                    headers: {
+                        "Authorization": authHeader
+                    },
+                    method: "GET"
+                });
+    
+                const data = await response.json();
+                users = [...users, ...data.Resources];
+    
+                console.log(`Loading IAS User - current count ${users.length}`);
+                idx += 100;
+    
+            } while (users.length < response.totalResults);
+    
+            console.log(`Finished loading IAS Users - count ${users.length}`);
+            let includesword = []
+            users.forEach(user => {
+                if (user.id.toLowerCase().includes(id.trim().toLowerCase())) {
+                    
+                    includesword.push(user);
+                }
+            });
+            
+            return includesword;
+    
+        } catch (error) {
+            console.error("Error fetching IAS groups:", error);
+            return "Error fetching User";
+        }
+    });
+
+    
 
 
 

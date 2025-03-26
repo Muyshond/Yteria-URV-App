@@ -5,6 +5,9 @@ import JSONModel from "sap/ui/model/json/JSONModel";
 import Filter from "sap/ui/model/Filter";
 import FilterOperator from "sap/ui/model/FilterOperator";
 import containsOrEquals from "sap/ui/dom/containsOrEquals";
+import { foreach } from "@sap/cds";
+import Spreadsheet from "sap/ui/export/Spreadsheet";
+
 /**
  * @namespace urvfrontend.controller
  */
@@ -23,6 +26,7 @@ export default class Overview extends Controller {
         const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
         const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
         const grouptable = this.getView()?.byId("grouptable") as sap.m.panel;
+        const usertable = this.getView()?.byId("usertable") as sap.m.panel;
 
         const userInput = this.getView()?.byId("UserID") as sap.m.Input;
         const userID = userInput.getValue();
@@ -34,6 +38,8 @@ export default class Overview extends Controller {
         const selectedvalue = selectinput.getSelectedItem();
         //ZOEK OP GROUP
         if(selectedvalue.mProperties.key === "group"){
+            usertable.setVisible(false);
+            userpanel.setVisible(false)
             const groups = await this.getGroupByWord(userID);
             console.log(groups.value.length)
             if(groups.value.length === 0){
@@ -41,30 +47,120 @@ export default class Overview extends Controller {
                 grouppanel.setVisible(false);
                 grouptable.setVisible(false);
                 userpanel.setVisible(false);
+                usertable.setVisible(false);
                 return;
+
+                //Kan meerdere in lijst zitten maar niet getoond worden omdat er altijd 2 inzitten => Group en Group 2.
+                //Group matches exact maar toch 2 in lijst.
             } else if(groups.value.length > 1 ){
-                grouptable.setVisible(true);
-                const oJSONModel = new JSONModel({ value: groups.value });
-                this.getView().setModel(oJSONModel, "tablegroups");
+                let exactMatch = false;
+    
+                groups.value.forEach((group: { displayName: string }) => {
+                    if (group.displayName === userID) {
+                        exactMatch = true;
+                    }
+                });
+
+                if(exactMatch){
+                    this.setGroup(userID);
+                    grouptable.setVisible(false);
+                    
+                    return;
+
+                }else{
+                    grouppanel.setVisible(false);
+                    grouptable.setVisible(true);
+                    const oJSONModel = new JSONModel({ value: groups.value });
+                    this.getView().setModel(oJSONModel, "tablegroups"); 
+                }
+            
+               
 
 
+                //IN ORDE 
             } else if(groups.value.length === 1){
-                this.setGroup(userID);
-                grouptable.setVisible(false);
-                return;
+                console.log(groups.value[0])
+                if(groups.value[0] === "Group not found"){
+                    return;
+                }
+                else if(groups.value[0].displayName === userID){
+                    this.setGroup(userID);
+                    grouptable.setVisible(false);
+                    return;
+                } else{
+                    grouppanel.setVisible(false);
+                    grouptable.setVisible(true);
+                    const oJSONModel = new JSONModel({ value: groups.value });
+                    this.getView().setModel(oJSONModel, "tablegroups");
+                }
             }
+                
+        
+        
 
         //ZOEK OP USER
         } else if(selectedvalue.mProperties.key === "user"){
             grouptable.setVisible(false);
-
-            const user: any = await this.getIASUser(userID);
-            if(user.length === 0){
-                MessageToast.show("User with id " + userID + " not found.");
+            grouppanel.setVisible(false);
+                
+            const users = await this.getUserByWord(userID);
+            console.log(users)
+            if(users.value.length === 0){
+                MessageToast.show("There are no Users that include " + userID);
                 grouppanel.setVisible(false);
+                grouptable.setVisible(false);
                 userpanel.setVisible(false);
+                usertable.setVisible(false);
                 return;
+            } else if(users.value.length > 1){
+                let exactMatch = false;
+    
+                users.value.forEach((user: { id: string }) => {
+                    if (user.id === userID) {
+                        exactMatch = true;
+                    }
+                });
+
+                if(exactMatch){
+                    this.setUser(userID);
+                    usertable.setVisible(false);
+                    return;
+                }else{
+                    userpanel.setVisible(false);
+                    usertable.setVisible(true);
+                    const oJSONModel = new JSONModel({ value: users.value });
+                    this.getView().setModel(oJSONModel, "tableusers"); 
+                }
+
+            } else if (users.value.length === 1){
+                console.log(users.value[0])
+                if(users.value[0] === "User not found"){
+                    MessageToast.show("user not found")
+                    return;
+                }
+                else if(users.value[0].id === userID){
+                    this.setUser(userID);
+                    usertable.setVisible(false);
+                    return;
+                } else{
+                    userpanel.setVisible(false);
+                    usertable.setVisible(true);
+                    const oJSONModel = new JSONModel({ value: users.value });
+                    this.getView().setModel(oJSONModel, "tableusers");
+                }
+                
             }
+            
+        } 
+    }
+    
+
+    public async setUser(userID: any){
+        const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
+        const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
+
+        const user: any = await this.getIASUser(userID);
+            
             const userdata = user[0]
             this.setUserDetails(userdata);
             const grouprolerelationship = await this.getUserCollectionsViaGroup(userdata)
@@ -83,16 +179,22 @@ export default class Overview extends Controller {
     
                     result[group][roleCollection] = roles;
             }
+            const oJSONModel = new JSONModel({ value: result });
+            this.getView().setModel(oJSONModel, "groupdetails");
+
             this.setDataToTree(result);
             grouppanel.setVisible(false);
             userpanel.setVisible(true);
-        } 
+        }   
 
-
-
+        
+        
+       
+        this.setDataToTree2(result);
+        grouppanel.setVisible(true);
+        userpanel.setVisible(false);
+        return;
     }
-    }
-
 
     public async setGroup(userID: any){
         const group = await this.getGroup(userID);
@@ -115,7 +217,10 @@ export default class Overview extends Controller {
             const roles = roleCollectionData?.roleReferences?.map((role: any) => role.name) || [];
 
             result[roleCollection] = roles;
-        }   
+        }
+        
+        const oJSONModel = new JSONModel({ value: result });
+        this.getView().setModel(oJSONModel, "rolecollectiondetails");   
 
 
 
@@ -204,6 +309,34 @@ export default class Overview extends Controller {
         }
     }
 
+    public async getUserByWord(id: string){
+        try {
+
+            const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
+            const oBinding = oModel.bindContext(`/getUserByWord(...)`, undefined, {});
+            oBinding.setParameter("id", id);
+
+            const data = await oBinding.execute()
+                .then(() => {
+                    const oContext = oBinding.getBoundContext();
+                    if (!oContext) {
+                        return;
+                    }
+                    const group = oContext.getObject();
+                    return group;
+                })
+                .catch((oError: any) => {
+                    console.error("Error fetching Group:", oError);
+                    
+                });
+
+            return data;
+
+        } catch (error) {
+            console.error("Error catching groups:", error);
+        }
+    }
+
 
 
 
@@ -247,6 +380,7 @@ export default class Overview extends Controller {
             this.getView()?.setModel(oModel, "userModel");
         }
         oModel.setData(userdata);
+        console.log(userdata)
     }
 
     public setGroupDetails(groupdata: any) {
@@ -436,6 +570,200 @@ export default class Overview extends Controller {
 
         
     }
+    onUserPress(event: sap.ui.base.Event): void {
+        const oSelectedItem = event.getParameter("listItem") as ColumnListItem; 
+        const oContext = oSelectedItem.getBindingContext("tableusers"); 
+        
+
+        const oUserData = oContext.getObject() as { id: string }; 
+        const userID = oUserData.id; 
+        console.log(userID)
+        this.setUser(userID);
+
+        
+    }
+
+    public onExportUser(): void {
+        const oView = this.getView();
+        
+        const oUserModel = oView.getModel("userModel") as JSONModel;
+        const oUserData = oUserModel?.getData() || {};
+        console.log(oUserData)
+        const oGroupModel = oView.getModel("groupdetails") as JSONModel;
+        const oGroupData = oGroupModel?.getData() || {};
+    
+        const aCombinedData: any[] = [];
+    
+        const userData = {
+            "User ID": oUserData.id || "",
+            "User Name": oUserData.userName || "",
+            "Full Name": `${oUserData.name?.givenName || ""} ${oUserData.name?.familyName || ""}`,
+            "Email": oUserData.emails?.[0]?.value || "",
+            "User Type": oUserData.userType || "",
+            "User UUID": oUserData.userUuid || "",
+            "Login Time": oUserData.loginTime || "",
+            "Password Status": oUserData.passwordStatus || "",
+            "Mail Verified": oUserData.mailVerified || "",
+            "Source System": oUserData.sourceSystem || "",
+        };
+    
+        Object.entries(oGroupData.value || {}).forEach(([groupName, roleCollections]) => {
+            if (typeof roleCollections === "object" && roleCollections !== null && Object.keys(roleCollections).length > 0) {
+                Object.entries(roleCollections).forEach(([roleCollectionName, roles]) => {
+                    const aRoles = Array.isArray(roles) ? roles : [roles];
+                    aRoles.forEach((role) => {
+                        aCombinedData.push({
+                            "Group": groupName,
+                            "Role Collection": roleCollectionName,
+                            "Role": role
+                        });
+                    });
+                });
+            }
+        });
+        aCombinedData[0] = { ...aCombinedData[0], ...userData };        
+        console.log(aCombinedData[0]); 
+    
+        const aCombinedColumns = [
+            { label: "User ID", property: "User ID" },
+            { label: "User Name", property: "User Name" },
+            { label: "Full Name", property: "Full Name" },
+            { label: "Email", property: "Email" },
+            { label: "User Type", property: "User Type" },
+            { label: "User UUID", property: "User UUID" },
+            { label: "Login Time", property: "Login Time" },
+            { label: "Password Status", property: "Password Status" },
+            { label: "Mail Verified", property: "Mail Verified" },
+            { label: "Source System", property: "Source System" },
+            { label: "Group", property: "Group" },
+            { label: "Role Collection", property: "Role Collection" },
+            { label: "Role", property: "Role" }
+        ];
+    
+        const oSettings = {
+            workbook: {
+                columns: aCombinedColumns  
+            },
+            dataSource: Array.isArray(aCombinedData) && aCombinedData.length > 0 ? aCombinedData : [],  
+            fileName: `export.xlsx`  
+        };
+    
+        try {
+            const oSpreadsheet = new Spreadsheet(oSettings); 
+            oSpreadsheet.build()  
+                .finally(() => oSpreadsheet.destroy());  
+        } catch (error) {
+            console.error("Export failed:", error);  
+        }
+    }
+
+
+
+    public onExportGroup(): void {
+        const oView = this.getView();
+        const oUserModel = oView.getModel("groupModel") as JSONModel;
+        const oGroupData = oUserModel?.getData() || {};
+        const oMembersModel = oView.getModel("groupMembersModel") as JSONModel;
+        const oMembersData = oMembersModel?.getData() || {};
+        const oRolecollectionModel = oView.getModel("rolecollectiondetails") as JSONModel;
+        const oRolecollectionData = oRolecollectionModel?.getData() || {};
+
+        console.log(oRolecollectionData.value);
+        const roleCollections = oRolecollectionData.value;
+        let aExcelData: any[] = [];
+        
+        
+        const groupId = oGroupData.id;
+        const groupName = oGroupData.displayName;
+        
+        const groupMembers = oGroupData.members;
+        
+       
+
+        
+        aExcelData.push({
+            id: groupId,
+            GroupName: groupName,
+            UserID: "",
+            "Display Name": "",
+            "Role Collection": "",
+            Role: ""
+        });
+        
+        groupMembers.forEach(member => {
+            aExcelData.push({
+                id: "",
+                GroupName: "",
+                UserID: member.value || "",
+                "Display Name": member.display || "",
+                "Role Collection": "",
+                Role: ""
+            });
+        });
+        
+        Object.entries(roleCollections).forEach(([roleCollection, roles]) => {
+            if (Array.isArray(roles)) {
+                roles.forEach(role => {
+                    aExcelData.push({
+                        id: "",
+                        GroupName: "",
+                        UserID: "",
+                        "Display Name": "",
+                        "Role Collection": roleCollection,
+                        Role: role
+                    });
+                });
+            }
+        });
+        
+        
+
+        aExcelData[0] = {...aExcelData[0], ...{id: groupId, GroupName: groupName }}
+        console.log(aExcelData);
+            
+    
+    
+            
+        
+    
+    
+        const aColumns = [
+            { label: "Group ID", property: "id" },
+            { label: "Group Name", property: "GroupName" },
+            { label: "UserID", property: "UserID" },
+            { label: "Display Name", property: "Display Name" },
+            { label: "Role Collection", property: "Role Collection" },
+            { label: "Role", property: "Role" }
+        ];
+    
+        const oSettings = {
+            workbook: {
+                columns: aColumns
+            },
+            dataSource: aExcelData,
+            fileName: `Groups_Export.xlsx`
+        };
+    
+        try {
+            const oSpreadsheet = new Spreadsheet(oSettings);
+            oSpreadsheet.build().finally(() => oSpreadsheet.destroy());
+        } catch (error) {
+            console.error("Export failed:", error);
+        }
+
+
+
+
+
+
+    
+        
+        
+       
+    }
+    
+
+   
 
 
 

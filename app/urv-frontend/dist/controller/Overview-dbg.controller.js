@@ -1,6 +1,6 @@
 "use strict";
 
-sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model/json/JSONModel"], function (MessageToast, Controller, JSONModel) {
+sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model/json/JSONModel", "sap/ui/export/Spreadsheet"], function (MessageToast, Controller, JSONModel, Spreadsheet) {
   "use strict";
 
   /**
@@ -11,6 +11,8 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
     getUser: async function _getUser() {
       const userpanel = this.getView()?.byId("byUserId");
       const grouppanel = this.getView()?.byId("bygroup");
+      const grouptable = this.getView()?.byId("grouptable");
+      const usertable = this.getView()?.byId("usertable");
       const userInput = this.getView()?.byId("UserID");
       const userID = userInput.getValue();
       if (userID === "") {
@@ -21,69 +23,173 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
       const selectedvalue = selectinput.getSelectedItem();
       //ZOEK OP GROUP
       if (selectedvalue.mProperties.key === "group") {
-        const group = await this.getGroup(userID);
-        console.log(group);
-        if (group.value[0] === "Group not found") {
-          MessageToast.show("Could not find Group with name " + userID);
+        usertable.setVisible(false);
+        userpanel.setVisible(false);
+        const groups = await this.getGroupByWord(userID);
+        console.log(groups.value.length);
+        if (groups.value.length === 0) {
+          MessageToast.show("There are no groups that include " + userID);
           grouppanel.setVisible(false);
+          grouptable.setVisible(false);
           userpanel.setVisible(false);
+          usertable.setVisible(false);
           return;
-        }
-        this.setGroupDetails(group.value[0]);
-        const members = group.value[0].members;
-        if (members !== undefined) {
-          const oJSONModel = new JSONModel({
-            members
+
+          //Kan meerdere in lijst zitten maar niet getoond worden omdat er altijd 2 inzitten => Group en Group 2.
+          //Group matches exact maar toch 2 in lijst.
+        } else if (groups.value.length > 1) {
+          let exactMatch = false;
+          groups.value.forEach(group => {
+            if (group.displayName === userID) {
+              exactMatch = true;
+            }
           });
-          this.getView()?.setModel(oJSONModel, "groupMembersModel");
+          console.log(exactMatch + " juist = ok");
+          if (exactMatch) {
+            this.setGroup(userID);
+            grouptable.setVisible(false);
+            return;
+          } else {
+            grouppanel.setVisible(false);
+            grouptable.setVisible(true);
+            const oJSONModel = new JSONModel({
+              value: groups.value
+            });
+            this.getView().setModel(oJSONModel, "tablegroups");
+          }
+
+          //IN ORDE 
+        } else if (groups.value.length === 1) {
+          console.log(groups.value[0]);
+          if (groups.value[0] === "Group not found") {
+            return;
+          } else if (groups.value[0].displayName === userID) {
+            this.setGroup(userID);
+            grouptable.setVisible(false);
+            return;
+          } else {
+            grouppanel.setVisible(false);
+            grouptable.setVisible(true);
+            const oJSONModel = new JSONModel({
+              value: groups.value
+            });
+            this.getView().setModel(oJSONModel, "tablegroups");
+          }
         }
-        const result = {};
-        const rolecolltions = await this.getGroupRoles(group.value[0].displayName);
-        for (const roleCollection of rolecolltions) {
+
+        //ZOEK OP USER
+      } else if (selectedvalue.mProperties.key === "user") {
+        grouptable.setVisible(false);
+        grouppanel.setVisible(false);
+        const users = await this.getUserByWord(userID);
+        console.log(users);
+        if (users.value.length === 0) {
+          MessageToast.show("There are no Users that include " + userID);
+          grouppanel.setVisible(false);
+          grouptable.setVisible(false);
+          userpanel.setVisible(false);
+          usertable.setVisible(false);
+          return;
+        } else if (users.value.length > 1) {
+          let exactMatch = false;
+          users.value.forEach(user => {
+            if (user.id === userID) {
+              exactMatch = true;
+            }
+          });
+          console.log(exactMatch + " juist = ok");
+          if (exactMatch) {
+            this.setUser(userID);
+            usertable.setVisible(false);
+            return;
+          } else {
+            userpanel.setVisible(false);
+            usertable.setVisible(true);
+            const oJSONModel = new JSONModel({
+              value: users.value
+            });
+            this.getView().setModel(oJSONModel, "tableusers");
+          }
+        } else if (users.value.length === 1) {
+          console.log(users.value[0]);
+          if (users.value[0] === "User not found") {
+            MessageToast.show("user not found");
+            return;
+          } else if (users.value[0].id === userID) {
+            this.setUser(userID);
+            usertable.setVisible(false);
+            return;
+          } else {
+            userpanel.setVisible(false);
+            usertable.setVisible(true);
+            const oJSONModel = new JSONModel({
+              value: users.value
+            });
+            this.getView().setModel(oJSONModel, "tableusers");
+          }
+        }
+      }
+    },
+    setUser: async function _setUser(userID) {
+      const userpanel = this.getView()?.byId("byUserId");
+      const grouppanel = this.getView()?.byId("bygroup");
+      const user = await this.getIASUser(userID);
+      const userdata = user[0];
+      this.setUserDetails(userdata);
+      const grouprolerelationship = await this.getUserCollectionsViaGroup(userdata);
+      const formattedData = Object.entries(grouprolerelationship).map(_ref => {
+        let [group, value] = _ref;
+        return {
+          group,
+          roleCollections: value
+        };
+      });
+      const result = {};
+      for (const {
+        group,
+        roleCollections
+      } of formattedData) {
+        result[group] = {};
+        for (const roleCollection of roleCollections) {
           const response = await this.getRolecollectionRoles(roleCollection);
           const roleCollectionData = response?.value?.[0];
           const roles = roleCollectionData?.roleReferences?.map(role => role.name) || [];
-          result[roleCollection] = roles;
+          result[group][roleCollection] = roles;
         }
-        this.setDataToTree2(result);
-        grouppanel.setVisible(true);
-        userpanel.setVisible(false);
-        //ZOEK OP USER
-      } else if (selectedvalue.mProperties.key === "user") {
-        const user = await this.getIASUser(userID);
-        if (user.length === 0) {
-          MessageToast.show("User with id " + userID + " not found.");
-          grouppanel.setVisible(false);
-          userpanel.setVisible(false);
-          return;
-        }
-        const userdata = user[0];
-        this.setUserDetails(userdata);
-        const grouprolerelationship = await this.getUserCollectionsViaGroup(userdata);
-        const formattedData = Object.entries(grouprolerelationship).map(_ref => {
-          let [group, value] = _ref;
-          return {
-            group,
-            roleCollections: value
-          };
-        });
-        const result = {};
-        for (const {
-          group,
-          roleCollections
-        } of formattedData) {
-          result[group] = {};
-          for (const roleCollection of roleCollections) {
-            const response = await this.getRolecollectionRoles(roleCollection);
-            const roleCollectionData = response?.value?.[0];
-            const roles = roleCollectionData?.roleReferences?.map(role => role.name) || [];
-            result[group][roleCollection] = roles;
-          }
-          this.setDataToTree(result);
-          grouppanel.setVisible(false);
-          userpanel.setVisible(true);
-        }
+        this.setDataToTree(result);
+        grouppanel.setVisible(false);
+        userpanel.setVisible(true);
       }
+      this.setDataToTree2(result);
+      grouppanel.setVisible(true);
+      userpanel.setVisible(false);
+      return;
+    },
+    setGroup: async function _setGroup(userID) {
+      const group = await this.getGroup(userID);
+      console.log(group);
+      const userpanel = this.getView()?.byId("byUserId");
+      const grouppanel = this.getView()?.byId("bygroup");
+      this.setGroupDetails(group.value[0]);
+      const members = group.value[0].members;
+      if (members !== undefined) {
+        const oJSONModel = new JSONModel({
+          members
+        });
+        this.getView()?.setModel(oJSONModel, "groupMembersModel");
+      }
+      const result = {};
+      const rolecolltions = await this.getGroupRoles(group.value[0].displayName);
+      for (const roleCollection of rolecolltions) {
+        const response = await this.getRolecollectionRoles(roleCollection);
+        const roleCollectionData = response?.value?.[0];
+        const roles = roleCollectionData?.roleReferences?.map(role => role.name) || [];
+        result[roleCollection] = roles;
+      }
+      this.setDataToTree2(result);
+      grouppanel.setVisible(true);
+      userpanel.setVisible(false);
+      return;
     },
     getGroupRoles: async function _getGroupRoles(groupName) {
       const roleCollectionsData = await this.getRoleCollections();
@@ -118,6 +224,46 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
         return data;
       } catch (error) {
         console.error("Error:", error);
+      }
+    },
+    getGroupByWord: async function _getGroupByWord(id) {
+      try {
+        const oModel = this.getView()?.getModel();
+        const oBinding = oModel.bindContext(`/getGroupByWord(...)`, undefined, {});
+        oBinding.setParameter("GroupName", id);
+        const data = await oBinding.execute().then(() => {
+          const oContext = oBinding.getBoundContext();
+          if (!oContext) {
+            return;
+          }
+          const group = oContext.getObject();
+          return group;
+        }).catch(oError => {
+          console.error("Error fetching Group:", oError);
+        });
+        return data;
+      } catch (error) {
+        console.error("Error catching groups:", error);
+      }
+    },
+    getUserByWord: async function _getUserByWord(id) {
+      try {
+        const oModel = this.getView()?.getModel();
+        const oBinding = oModel.bindContext(`/getUserByWord(...)`, undefined, {});
+        oBinding.setParameter("id", id);
+        const data = await oBinding.execute().then(() => {
+          const oContext = oBinding.getBoundContext();
+          if (!oContext) {
+            return;
+          }
+          const group = oContext.getObject();
+          return group;
+        }).catch(oError => {
+          console.error("Error fetching Group:", oError);
+        });
+        return data;
+      } catch (error) {
+        console.error("Error catching groups:", error);
       }
     },
     setDataToTree: function _setDataToTree(data) {
@@ -304,6 +450,53 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/core/mvc/Controller", "sap/ui/model
           }
         }
       });
+    },
+    onGroupPress: function _onGroupPress(event) {
+      const oSelectedItem = event.getParameter("listItem");
+      const oContext = oSelectedItem.getBindingContext("tablegroups");
+      const oGroupData = oContext.getObject();
+      const groupName = oGroupData.displayName;
+      this.setGroup(groupName);
+    },
+    onUserPress: function _onUserPress(event) {
+      const oSelectedItem = event.getParameter("listItem");
+      const oContext = oSelectedItem.getBindingContext("tableusers");
+      const oUserData = oContext.getObject();
+      const userID = oUserData.id;
+      console.log(userID);
+      this.setUser(userID);
+    },
+    onExportToExcel: function _onExportToExcel(tableId, modelName, fileName) {
+      const oTable = this.byId(tableId);
+      const oModel = this.getView()?.getModel(modelName);
+      const aData = oModel.getProperty("/value");
+      const aColumns = oTable.getColumns().map((oColumn, index) => {
+        const oLabel = oColumn.getHeader();
+        return {
+          label: oLabel?.getText?.() || `Column ${index + 1}`,
+          property: oTable.getItems()[0]?.getCells()[index]?.getBinding("text")?.getPath() || ""
+        };
+      });
+      const oSettings = {
+        workbook: {
+          columns: aColumns
+        },
+        dataSource: aData,
+        fileName: `${fileName}.xlsx`
+      };
+      const oSpreadsheet = new Spreadsheet(oSettings);
+      oSpreadsheet.build().finally(() => {
+        oSpreadsheet.destroy();
+      });
+    },
+    onExportUsers: function _onExportUsers() {
+      this.onExportToExcel("usersTable", "tableusers", "Users");
+    },
+    onExportGroups: function _onExportGroups() {
+      this.onExportToExcel("groupsTable2", "tablegroups", "Groups");
+    },
+    onExportGroupMembers: function _onExportGroupMembers() {
+      this.onExportToExcel("groupMembersTable", "groupMembersModel", "Group Members");
     }
   });
   return Overview;

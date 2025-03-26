@@ -15,7 +15,39 @@
         </Select>
     </FlexBox>
     <Button id="userButton" text="Search" type="Emphasized" press="getUser"></Button>
-
+<Panel id="usertable" visible="false" headerText="Select a user">
+    <VBox>
+        <Table id="usersTable" items="{tableusers>/value}" mode="SingleSelectMaster" itemPress="onUserPress">
+        <headerToolbar>
+        <OverflowToolbar>
+            <Title text="Groups" level="H2"/>
+            <ToolbarSpacer/>
+            <Button text="Export to Excel" icon="sap-icon://excel-attachment" press="onExportUsers"/>
+        </OverflowToolbar>
+    </headerToolbar>
+            <columns>
+                <Column>
+                    <Text text="ID" />
+                </Column>
+                <Column>
+                    <Text text="First Name" />
+                </Column>
+                <Column>
+                    <Text text="Last Name" />
+                </Column>
+            </columns>
+            <items>
+                <ColumnListItem press="onUserPress" type="Active">
+                    <cells>
+                        <Text text="{tableusers>id}" />
+                        <Text text="{tableusers>name/givenName}" />
+                        <Text text="{tableusers>name/familyName}" />
+                    </cells>
+                </ColumnListItem>
+            </items>
+        </Table>
+    </VBox>
+</Panel>
 
 <Panel id="byUserId" visible="false">
     <Panel id="userdetails" headerText="User details">
@@ -41,9 +73,42 @@
     </Panel>
 </Panel>
 
+<Panel id="grouptable" visible="false" headerText="Select a Group">
+    <VBox>
+        
 
-<Panel id="bygroup" visible="false">
-    <Panel id="groupdetails" headerText="Group details">
+        <Table id="groupsTable2" items="{tablegroups>/value}" 
+               mode="SingleSelectMaster" 
+               itemPress="onGroupPress">
+               <headerToolbar>
+        <OverflowToolbar>
+            <Title text="Groups" level="H2"/>
+            <ToolbarSpacer/>
+            <Button text="Export to Excel" icon="sap-icon://excel-attachment" press="onExportGroups"/>
+        </OverflowToolbar>
+    </headerToolbar>
+            <columns>
+                <Column>
+                    <Text text="Group Name" />
+                </Column>
+            </columns>
+            <items>
+                <ColumnListItem type="Active">
+                    <cells>
+                        <Text text="{tablegroups>displayName}" />
+                    </cells>
+                </ColumnListItem>
+            </items>
+        </Table>
+    </VBox> 
+</Panel>
+
+
+
+<Panel id="bygroup" visible="false" headerText="Group details">
+    <Panel id="groupdetails">
+
+        
         <content >
             <VBox class="sapUiSmallMargin" >
                 <Text text="Display name: {groupModel>/displayName}" />
@@ -51,6 +116,13 @@
             </VBox>
         </content>
         <Table id="groupMembersTable" items="{groupMembersModel>/members}" headerText="Group members">
+        <headerToolbar>
+        <OverflowToolbar>
+            <Title text="Groups" level="H2"/>
+            <ToolbarSpacer/>
+            <Button text="Export to Excel" icon="sap-icon://excel-attachment" press="onExportGroupMembers"/>
+        </OverflowToolbar>
+    </headerToolbar>
             <columns>
                 <Column>
                     <Text text="User ID"/>
@@ -81,6 +153,10 @@
     </Panel>
 
 </Panel>
+
+
+
+
     
     </Page>
     

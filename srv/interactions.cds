@@ -41,6 +41,10 @@ service CatalogService {
     
     function getGroupByWord(GroupName: String) returns array of{
 
-    }
+    };
+
+    function getUserByWord(id: String) returns array of{
+
+    };
     
 }
