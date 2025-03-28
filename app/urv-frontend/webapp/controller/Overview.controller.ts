@@ -20,7 +20,6 @@ export default class Overview extends Controller {
     /*eslint-disable @typescript-eslint/no-empty-function*/
     public onInit(): void {
         document.addEventListener("keydown", this.onKeyDown.bind(this));
-        console.log(testService.testfunction());
     }
 
     private onKeyDown(event: KeyboardEvent): void {
@@ -224,7 +223,7 @@ export default class Overview extends Controller {
             
         }
         const result: any = {}
-        const rolecolltions = await this.getGroupRoles(group.value[0].displayName);
+        const rolecolltions = await dataService.getGroupRoles(group.value[0].displayName, this.getView());
         for (const roleCollection of rolecolltions) {
             const response = await dataService.getRolecollectionRoles(roleCollection, this.getView()); 
             const roleCollectionData = response?.value?.[0]; 
@@ -242,27 +241,6 @@ export default class Overview extends Controller {
         grouppanel.setVisible(true);
         userpanel.setVisible(false);
         return;
-    }
-
-    public async getGroupRoles(groupName: string){
-        const roleCollectionsData = await dataService.getRoleCollections(this.getView());
-        const roleCollections = roleCollectionsData?.value || [];
-        const matchedRoles: string[] = [];
-
-        roleCollections.forEach((roleCollection: any) => {
-            if (!roleCollection.groupReferences && !roleCollection.samlAttributeAssignment) {
-                return;
-            }
-            const roleGroups = [
-                ...(roleCollection.groupReferences || []).map((grp: any) => grp.attributeValue),
-                ...(roleCollection.samlAttributeAssignment || []).map((saml: any) => saml.attributeValue)
-            ];
-
-            if (roleGroups.includes(groupName)) {
-                matchedRoles.push(roleCollection.name);
-            }
-        });
-        return matchedRoles;
     }
 
 
@@ -427,8 +405,6 @@ export default class Overview extends Controller {
         const userID = oUserData.id; 
         console.log(userID)
         this.setUser(userID);
-
-        
     }
 
     public onExportUser(): void {

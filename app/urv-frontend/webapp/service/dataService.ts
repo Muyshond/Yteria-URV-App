@@ -3,9 +3,7 @@ import { ODataModel } from "sap/ui/model/odata/v2/ODataModel";
 
 export default class dataService {
     
-    static testfunction(): String {
-        return "test hsjldlmqHDFJKLMSQDHJFKQSLH"
-    }
+    
 
     static async getGroup(id: string, oView: any){
         try {
@@ -175,6 +173,28 @@ export default class dataService {
         }
     }
 
+
+    static async getGroupRoles(groupName: string, oView: any){
+        
+        const roleCollectionsData = await dataService.getRoleCollections(oView);
+        const roleCollections = roleCollectionsData?.value || [];
+        const matchedRoles: string[] = [];
+
+        roleCollections.forEach((roleCollection: any) => {
+            if (!roleCollection.groupReferences && !roleCollection.samlAttributeAssignment) {
+                return;
+            }
+            const roleGroups = [
+                ...(roleCollection.groupReferences || []).map((grp: any) => grp.attributeValue),
+                ...(roleCollection.samlAttributeAssignment || []).map((saml: any) => saml.attributeValue)
+            ];
+
+            if (roleGroups.includes(groupName)) {
+                matchedRoles.push(roleCollection.name);
+            }
+        });
+        return matchedRoles;
+    }
 
 
 

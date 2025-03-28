@@ -4,9 +4,7 @@ import Spreadsheet from "sap/ui/export/Spreadsheet";
 
 export default class exportService {
     
-    static testfunction(): String {
-        return "test hsjldlmqHDFJKLMSQDHJFKQSLH"
-    }
+    
 
     static onExportUser(oView: any): void {
         
