@@ -5,7 +5,7 @@
 
 <Page id="page" title="URV TOOL">
     <FlexBox direction="Row" alignItems="Center"  >
-        <Input id="UserID" placeholder="User ID" />
+        <Input id="UserID" placeholder="User ID" liveChange="onLiveChange"  />
         <Select id="select" >
             <items>
                 <core:ListItem key="user" text="Search by UserID" icon="sap-icon://person-placeholder"/>

@@ -3,9 +3,9 @@
     xmlns="sap.m"
         xmlns:core="sap.ui.core">
 
-    <Page id="page" title="URV TOOL">
+<Page id="page" title="URV TOOL">
     <FlexBox direction="Row" alignItems="Center"  >
-        <Input id="UserID" placeholder="User ID" />
+        <Input id="UserID" placeholder="User ID" liveChange="onLiveChange"  />
         <Select id="select" >
             <items>
                 <core:ListItem key="user" text="Search by UserID" icon="sap-icon://person-placeholder"/>
@@ -14,17 +14,12 @@
             </items>
         </Select>
     </FlexBox>
-    <Button id="userButton" text="Search" type="Emphasized" press="getUser"></Button>
+    <Button id="userButton" text="Search" type="Emphasized" press="getUser" />
+
 <Panel id="usertable" visible="false" headerText="Select a user">
     <VBox>
         <Table id="usersTable" items="{tableusers>/value}" mode="SingleSelectMaster" itemPress="onUserPress">
-        <headerToolbar>
-        <OverflowToolbar>
-            <Title text="Groups" level="H2"/>
-            <ToolbarSpacer/>
-            <Button text="Export to Excel" icon="sap-icon://excel-attachment" press="onExportUsers"/>
-        </OverflowToolbar>
-    </headerToolbar>
+        
             <columns>
                 <Column>
                     <Text text="ID" />
@@ -51,6 +46,13 @@
 
 <Panel id="byUserId" visible="false">
     <Panel id="userdetails" headerText="User details">
+        <headerToolbar>
+            <OverflowToolbar>
+                <Title text="User details" level="H2"/>
+                <ToolbarSpacer/>
+                <Button text="Export to Excel" icon="sap-icon://excel-attachment" press="onExportUser"/>
+            </OverflowToolbar>
+        </headerToolbar>
         <content>
             <VBox class="sapUiSmallMargin">
                 <Text text="User ID: {userModel>/id}" />
@@ -80,13 +82,7 @@
         <Table id="groupsTable2" items="{tablegroups>/value}" 
                mode="SingleSelectMaster" 
                itemPress="onGroupPress">
-               <headerToolbar>
-        <OverflowToolbar>
-            <Title text="Groups" level="H2"/>
-            <ToolbarSpacer/>
-            <Button text="Export to Excel" icon="sap-icon://excel-attachment" press="onExportGroups"/>
-        </OverflowToolbar>
-    </headerToolbar>
+               
             <columns>
                 <Column>
                     <Text text="Group Name" />
@@ -107,7 +103,13 @@
 
 <Panel id="bygroup" visible="false" headerText="Group details">
     <Panel id="groupdetails">
-
+    <headerToolbar>
+            <OverflowToolbar>
+                <Title text="User details" level="H2"/>
+                <ToolbarSpacer/>
+                <Button text="Export to Excel" icon="sap-icon://excel-attachment" press="onExportGroup"/>
+            </OverflowToolbar>
+        </headerToolbar>
         
         <content >
             <VBox class="sapUiSmallMargin" >
@@ -116,13 +118,7 @@
             </VBox>
         </content>
         <Table id="groupMembersTable" items="{groupMembersModel>/members}" headerText="Group members">
-        <headerToolbar>
-        <OverflowToolbar>
-            <Title text="Groups" level="H2"/>
-            <ToolbarSpacer/>
-            <Button text="Export to Excel" icon="sap-icon://excel-attachment" press="onExportGroupMembers"/>
-        </OverflowToolbar>
-    </headerToolbar>
+        
             <columns>
                 <Column>
                     <Text text="User ID"/>

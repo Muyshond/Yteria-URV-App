@@ -15,14 +15,28 @@ export default class Overview extends Controller {
 
     /*eslint-disable @typescript-eslint/no-empty-function*/
     public onInit(): void {
+        document.addEventListener("keydown", this.onKeyDown.bind(this));
 
-      
     }
+
+    private onKeyDown(event: KeyboardEvent): void {
+        if (event.key === "Enter") {
+            console.log("Pressed Enter");
+            this.getUser();
+        }
+    }
+    
+    
+
+    
 
     
 
 
     public async getUser() {
+    
+
+
         const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
         const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
         const grouptable = this.getView()?.byId("grouptable") as sap.m.panel;
@@ -60,7 +74,6 @@ export default class Overview extends Controller {
                         exactMatch = true;
                     }
                 });
-                console.log(exactMatch + " juist = ok")
 
                 if(exactMatch){
                     this.setGroup(userID);
@@ -121,7 +134,6 @@ export default class Overview extends Controller {
                         exactMatch = true;
                     }
                 });
-                console.log(exactMatch + " juist = ok")
 
                 if(exactMatch){
                     this.setUser(userID);
@@ -181,13 +193,17 @@ export default class Overview extends Controller {
     
                     result[group][roleCollection] = roles;
             }
+            const oJSONModel = new JSONModel({ value: result });
+            this.getView().setModel(oJSONModel, "groupdetails");
+
             this.setDataToTree(result);
             grouppanel.setVisible(false);
             userpanel.setVisible(true);
         }   
 
-
-
+        
+        
+       
         this.setDataToTree2(result);
         grouppanel.setVisible(true);
         userpanel.setVisible(false);
@@ -215,7 +231,10 @@ export default class Overview extends Controller {
             const roles = roleCollectionData?.roleReferences?.map((role: any) => role.name) || [];
 
             result[roleCollection] = roles;
-        }   
+        }
+        
+        const oJSONModel = new JSONModel({ value: result });
+        this.getView().setModel(oJSONModel, "rolecollectiondetails");   
 
 
 
@@ -375,6 +394,7 @@ export default class Overview extends Controller {
             this.getView()?.setModel(oModel, "userModel");
         }
         oModel.setData(userdata);
+        console.log(userdata)
     }
 
     public setGroupDetails(groupdata: any) {
@@ -577,44 +597,136 @@ export default class Overview extends Controller {
         
     }
 
-
-    public onExportToExcel(tableId: string, modelName: string, fileName: string): void {
-        const oTable = this.byId(tableId) as Table;
-        const oModel = this.getView()?.getModel(modelName) as JSONModel;
-        const aData = oModel.getProperty("/value");
-
-        const aColumns = oTable.getColumns().map((oColumn, index) => {
-            const oLabel = oColumn.getHeader() as any;
-            return {
-                label: oLabel?.getText?.() || `Column ${index + 1}`,
-                property: oTable.getItems()[0]?.getCells()[index]?.getBinding("text")?.getPath() || ""
-            };
-        });
-
-        const oSettings = {
-            workbook: { columns: aColumns },
-            dataSource: aData,
-            fileName: `${fileName}.xlsx`
+    public onExportUser(): void {
+        const oView = this.getView();
+        
+        const oUserModel = oView.getModel("userModel") as JSONModel;
+        const oUserData = oUserModel?.getData() || {};
+        console.log(oUserData)
+        const oGroupModel = oView.getModel("groupdetails") as JSONModel;
+        const oGroupData = oGroupModel?.getData() || {};
+    
+        const aCombinedData: any[] = [];
+    
+        const userData = {
+            "User ID": oUserData.id || "",
+            "User Name": oUserData.userName || "",
+            "Full Name": `${oUserData.name?.givenName || ""} ${oUserData.name?.familyName || ""}`,
+            "Email": oUserData.emails?.[0]?.value || "",
+            "User Type": oUserData.userType || "",
+            "User UUID": oUserData.userUuid || "",
+            "Login Time": oUserData.loginTime || "",
+            "Password Status": oUserData.passwordStatus || "",
+            "Mail Verified": oUserData.mailVerified || "",
+            "Source System": oUserData.sourceSystem || "",
         };
-
-        const oSpreadsheet = new Spreadsheet(oSettings);
-        oSpreadsheet.build().finally(() => {
-            oSpreadsheet.destroy();
+    
+        Object.entries(oGroupData.value || {}).forEach(([groupName, roleCollections]) => {
+            if (typeof roleCollections === "object" && roleCollections !== null && Object.keys(roleCollections).length > 0) {
+                Object.entries(roleCollections).forEach(([roleCollectionName, roles]) => {
+                    const aRoles = Array.isArray(roles) ? roles : [roles];
+                    aRoles.forEach((role) => {
+                        aCombinedData.push({
+                            "Group": groupName,
+                            "Role Collection": roleCollectionName,
+                            "Role": role
+                        });
+                    });
+                });
+            }
         });
+        aCombinedData[0] = { ...aCombinedData[0], ...userData };        
+        console.log(aCombinedData[0]); 
+    
+        const aCombinedColumns = [
+            { label: "User ID", property: "User ID" },
+            { label: "User Name", property: "User Name" },
+            { label: "Full Name", property: "Full Name" },
+            { label: "Email", property: "Email" },
+            { label: "User Type", property: "User Type" },
+            { label: "User UUID", property: "User UUID" },
+            { label: "Login Time", property: "Login Time" },
+            { label: "Password Status", property: "Password Status" },
+            { label: "Mail Verified", property: "Mail Verified" },
+            { label: "Source System", property: "Source System" },
+            { label: "Group", property: "Group" },
+            { label: "Role Collection", property: "Role Collection" },
+            { label: "Role", property: "Role" }
+        ];
+    
+        const oSettings = {
+            workbook: {
+                columns: aCombinedColumns  
+            },
+            dataSource: Array.isArray(aCombinedData) && aCombinedData.length > 0 ? aCombinedData : [],  
+            fileName: `export.xlsx`  
+        };
+    
+        try {
+            const oSpreadsheet = new Spreadsheet(oSettings); 
+            oSpreadsheet.build()  
+                .finally(() => oSpreadsheet.destroy());  
+        } catch (error) {
+            console.error("Export failed:", error);  
+        }
     }
 
 
-    public onExportUsers(): void {
-        this.onExportToExcel("usersTable", "tableusers", "Users");
-    }
 
-    public onExportGroups(): void {
-        this.onExportToExcel("groupsTable2", "tablegroups", "Groups");
+    public onExportGroup(): void {
+        const oView = this.getView();
+        const oUserModel = oView.getModel("groupModel") as JSONModel;
+        const oGroupData = oUserModel?.getData() || {};
+        const oMembersModel = oView.getModel("groupMembersModel") as JSONModel;
+        const oMembersData = oMembersModel?.getData() || {};
+        const oRolecollectionModel = oView.getModel("rolecollectiondetails") as JSONModel;
+        const oRolecollectionData = oRolecollectionModel?.getData() || {};
+    
+        const roleCollections = oRolecollectionData.value || [];
+        const groupMembers = oGroupData.members || [];
+    
+        let aExcelData: any[] = [];
+        const maxLength = Math.max(groupMembers.length, Object.keys(roleCollections).length);
+    
+        for (let i = 0; i < maxLength; i++) {
+            aExcelData.push({
+                id: i === 0 ? oGroupData.id || "" : "", // Only show Group ID in the first row
+                GroupName: i === 0 ? oGroupData.displayName || "" : "", // Only show Group Name in the first row
+                UserID: groupMembers[i]?.value || "", 
+                "Display Name": groupMembers[i]?.display || "", 
+                "Role Collection": Object.keys(roleCollections)[i] || "", 
+                Role: roleCollections[Object.keys(roleCollections)[i]]?.join(", ") || "" // Join roles in case of multiple
+            });
+        }
+    
+        const aColumns = [
+            { label: "Group ID", property: "id" },
+            { label: "Group Name", property: "GroupName" },
+            { label: "UserID", property: "UserID" },
+            { label: "Display Name", property: "Display Name" },
+            { label: "Role Collection", property: "Role Collection" },
+            { label: "Role", property: "Role" }
+        ];
+    
+        const oSettings = {
+            workbook: {
+                columns: aColumns
+            },
+            dataSource: aExcelData,
+            fileName: `Groups_Export.xlsx`
+        };
+    
+        try {
+            const oSpreadsheet = new Spreadsheet(oSettings);
+            oSpreadsheet.build().finally(() => oSpreadsheet.destroy());
+        } catch (error) {
+            console.error("Export failed:", error);
+        }
     }
+    
+    
 
-    public onExportGroupMembers(): void {
-        this.onExportToExcel("groupMembersTable", "groupMembersModel", "Group Members");
-    }
+   
 
 
 

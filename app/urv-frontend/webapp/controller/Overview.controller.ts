@@ -7,6 +7,10 @@ import FilterOperator from "sap/ui/model/FilterOperator";
 import containsOrEquals from "sap/ui/dom/containsOrEquals";
 import { foreach } from "@sap/cds";
 import Spreadsheet from "sap/ui/export/Spreadsheet";
+import testService from "../service/testService"; 
+import dataService from "../service/dataService"; 
+import exportService from "../service/exportService"; 
+
 
 /**
  * @namespace urvfrontend.controller
@@ -15,14 +19,23 @@ export default class Overview extends Controller {
 
     /*eslint-disable @typescript-eslint/no-empty-function*/
     public onInit(): void {
-
-      
+        document.addEventListener("keydown", this.onKeyDown.bind(this));
+        console.log(testService.testfunction());
     }
 
+    private onKeyDown(event: KeyboardEvent): void {
+        if (event.key === "Enter") {
+            console.log("Pressed Enter");
+            this.getUser();
+        }
+    }
+    
     
 
 
     public async getUser() {
+    
+
         const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
         const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
         const grouptable = this.getView()?.byId("grouptable") as sap.m.panel;
@@ -40,7 +53,7 @@ export default class Overview extends Controller {
         if(selectedvalue.mProperties.key === "group"){
             usertable.setVisible(false);
             userpanel.setVisible(false)
-            const groups = await this.getGroupByWord(userID);
+            const groups = await dataService.getGroupByWord(userID, this.getView());
             console.log(groups.value.length)
             if(groups.value.length === 0){
                 MessageToast.show("There are no groups that include " + userID);
@@ -103,7 +116,7 @@ export default class Overview extends Controller {
             grouptable.setVisible(false);
             grouppanel.setVisible(false);
                 
-            const users = await this.getUserByWord(userID);
+            const users = await dataService.getUserByWord(userID, this.getView());
             console.log(users)
             if(users.value.length === 0){
                 MessageToast.show("There are no Users that include " + userID);
@@ -159,7 +172,7 @@ export default class Overview extends Controller {
         const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
         const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
 
-        const user: any = await this.getIASUser(userID);
+        const user: any = await dataService.getIASUser(userID, this.getView());
             
             const userdata = user[0]
             this.setUserDetails(userdata);
@@ -173,7 +186,7 @@ export default class Overview extends Controller {
                 result[group] = {}; 
         
                 for (const roleCollection of roleCollections) {
-                    const response = await this.getRolecollectionRoles(roleCollection); 
+                    const response = await dataService.getRolecollectionRoles(roleCollection, this.getView()); 
                     const roleCollectionData = response?.value?.[0]; 
                     const roles = roleCollectionData?.roleReferences?.map((role: any) => role.name) || [];
     
@@ -197,7 +210,8 @@ export default class Overview extends Controller {
     }
 
     public async setGroup(userID: any){
-        const group = await this.getGroup(userID);
+
+        const group = await dataService.getGroup(userID, this.getView())
         console.log(group)
                 const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
         const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
@@ -212,7 +226,7 @@ export default class Overview extends Controller {
         const result: any = {}
         const rolecolltions = await this.getGroupRoles(group.value[0].displayName);
         for (const roleCollection of rolecolltions) {
-            const response = await this.getRolecollectionRoles(roleCollection); 
+            const response = await dataService.getRolecollectionRoles(roleCollection, this.getView()); 
             const roleCollectionData = response?.value?.[0]; 
             const roles = roleCollectionData?.roleReferences?.map((role: any) => role.name) || [];
 
@@ -231,7 +245,7 @@ export default class Overview extends Controller {
     }
 
     public async getGroupRoles(groupName: string){
-        const roleCollectionsData = await this.getRoleCollections();
+        const roleCollectionsData = await dataService.getRoleCollections(this.getView());
         const roleCollections = roleCollectionsData?.value || [];
         const matchedRoles: string[] = [];
 
@@ -250,95 +264,6 @@ export default class Overview extends Controller {
         });
         return matchedRoles;
     }
-
-
-    public async getGroup(id: string){
-        try {
-
-            const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
-            const oBinding = oModel.bindContext(`/getGroupByName(...)`, undefined, {});
-            oBinding.setParameter("GroupName", id);
-
-            const data = await oBinding.execute()
-                .then(() => {
-                    const oContext = oBinding.getBoundContext();
-                    if (!oContext) {
-                        return;
-                    }
-                    const group = oContext.getObject();
-                    return group;
-                })
-                .catch((oError: any) => {
-                    console.error("Error fetching Group:", oError);
-                    
-                });
-
-            return data;
-
-
-        } catch (error) {
-            console.error("Error:", error);
-        }
-    }
-
-    public async getGroupByWord(id: string){
-        try {
-
-            const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
-            const oBinding = oModel.bindContext(`/getGroupByWord(...)`, undefined, {});
-            oBinding.setParameter("GroupName", id);
-
-            const data = await oBinding.execute()
-                .then(() => {
-                    const oContext = oBinding.getBoundContext();
-                    if (!oContext) {
-                        return;
-                    }
-                    const group = oContext.getObject();
-                    return group;
-                })
-                .catch((oError: any) => {
-                    console.error("Error fetching Group:", oError);
-                    
-                });
-
-            return data;
-
-        } catch (error) {
-            console.error("Error catching groups:", error);
-        }
-    }
-
-    public async getUserByWord(id: string){
-        try {
-
-            const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
-            const oBinding = oModel.bindContext(`/getUserByWord(...)`, undefined, {});
-            oBinding.setParameter("id", id);
-
-            const data = await oBinding.execute()
-                .then(() => {
-                    const oContext = oBinding.getBoundContext();
-                    if (!oContext) {
-                        return;
-                    }
-                    const group = oContext.getObject();
-                    return group;
-                })
-                .catch((oError: any) => {
-                    console.error("Error fetching Group:", oError);
-                    
-                });
-
-            return data;
-
-        } catch (error) {
-            console.error("Error catching groups:", error);
-        }
-    }
-
-
-
 
 
     public setDataToTree(data: any) {
@@ -371,8 +296,6 @@ export default class Overview extends Controller {
         this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel2");
     }
 
-
-
     public setUserDetails(userdata: any) {
         let oModel = this.getView()?.getModel("userModel") as JSONModel;
         if (!oModel) {
@@ -395,7 +318,7 @@ export default class Overview extends Controller {
 
     public async getUserCollectionsViaGroup(user: any) {
         const userGroups = user.groups.map((group: any) => group.display);
-        const roleCollectionsData = await this.getRoleCollections();
+        const roleCollectionsData = await dataService.getRoleCollections(this.getView());
         const roleCollections = roleCollectionsData?.value || [];
         const groupRoleCollections: Record<string, string[]> = {};
 
@@ -422,85 +345,10 @@ export default class Overview extends Controller {
 
 
 
-    public async getIASUser(userid: string) {
-        try {
-            const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
-            const oBinding = oModel.bindContext(`/getIASUser(...)`, undefined, {});
-            oBinding.setParameter("id", userid);
-
-            const data = oBinding.execute()
-                .then(() => {
-                    const oContext = oBinding.getBoundContext();
-                    if (!oContext) {
-                        return;
-                    }
-                    const user = oContext.getObject();
-                    return user.value;
-                })
-                .catch((oError: any) => {
-                    console.error("Error fetching IAS User:", oError);
-                });
-            return data;
-                
-
-
-        } catch (error) {
-            console.error("Error :", error);
-        }
-    }
 
 
 
-    public async getRoleCollections(){
-        try {
 
-            
-            const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
-            const oBinding = oModel.bindContext(`/getRoleCollections(...)`, undefined, {});
-            
-            const data = oBinding.execute()
-                .then(() => {
-                    const oContext = oBinding.getBoundContext();
-                    if (!oContext) {
-                        return;
-                    }
-                    const user = oContext.getObject();
-                    return user;
-                })
-                .catch((oError: any) => {
-                    console.error("Error fetching role collectons:", oError);
-                });
-
-            return data;
-
-        } catch (error) {
-            console.error("Error:", error);
-        }
-        
-    }
-
-    public async getRolecollectionRoles(roleCollection: string){
-        try {
-            const oModel = this.getView()?.getModel() as sap.ui.model.odata.v4.ODataModel;
-            const oBinding = oModel.bindContext(`/getRoleCollectionRoles(...)`, undefined, {});
-            oBinding.setParameter("roleCollectionName", roleCollection);
-            const data = oBinding.execute()
-                .then(() => {
-                    const oContext = oBinding.getBoundContext();
-                    if (!oContext) {
-                        return;
-                    }
-                    const user = oContext.getObject();
-                    return user;
-                })
-                .catch((oError: any) => {
-                    console.error("Error fetching role collecton roles:", oError);
-                });
-            return data;
-        } catch (error) {
-            console.error("Error:", error);
-        }
-    }
 
     onSearch(event: sap.ui.base.Event): void {
         const searchword: string = event.getParameter("newValue")?.toLowerCase() || "";
@@ -585,186 +433,17 @@ export default class Overview extends Controller {
 
     public onExportUser(): void {
         const oView = this.getView();
+        exportService.onExportUser(oView);
         
-        const oUserModel = oView.getModel("userModel") as JSONModel;
-        const oUserData = oUserModel?.getData() || {};
-        console.log(oUserData)
-        const oGroupModel = oView.getModel("groupdetails") as JSONModel;
-        const oGroupData = oGroupModel?.getData() || {};
-    
-        const aCombinedData: any[] = [];
-    
-        const userData = {
-            "User ID": oUserData.id || "",
-            "User Name": oUserData.userName || "",
-            "Full Name": `${oUserData.name?.givenName || ""} ${oUserData.name?.familyName || ""}`,
-            "Email": oUserData.emails?.[0]?.value || "",
-            "User Type": oUserData.userType || "",
-            "User UUID": oUserData.userUuid || "",
-            "Login Time": oUserData.loginTime || "",
-            "Password Status": oUserData.passwordStatus || "",
-            "Mail Verified": oUserData.mailVerified || "",
-            "Source System": oUserData.sourceSystem || "",
-        };
-    
-        Object.entries(oGroupData.value || {}).forEach(([groupName, roleCollections]) => {
-            if (typeof roleCollections === "object" && roleCollections !== null && Object.keys(roleCollections).length > 0) {
-                Object.entries(roleCollections).forEach(([roleCollectionName, roles]) => {
-                    const aRoles = Array.isArray(roles) ? roles : [roles];
-                    aRoles.forEach((role) => {
-                        aCombinedData.push({
-                            "Group": groupName,
-                            "Role Collection": roleCollectionName,
-                            "Role": role
-                        });
-                    });
-                });
-            }
-        });
-        aCombinedData[0] = { ...aCombinedData[0], ...userData };        
-        console.log(aCombinedData[0]); 
-    
-        const aCombinedColumns = [
-            { label: "User ID", property: "User ID" },
-            { label: "User Name", property: "User Name" },
-            { label: "Full Name", property: "Full Name" },
-            { label: "Email", property: "Email" },
-            { label: "User Type", property: "User Type" },
-            { label: "User UUID", property: "User UUID" },
-            { label: "Login Time", property: "Login Time" },
-            { label: "Password Status", property: "Password Status" },
-            { label: "Mail Verified", property: "Mail Verified" },
-            { label: "Source System", property: "Source System" },
-            { label: "Group", property: "Group" },
-            { label: "Role Collection", property: "Role Collection" },
-            { label: "Role", property: "Role" }
-        ];
-    
-        const oSettings = {
-            workbook: {
-                columns: aCombinedColumns  
-            },
-            dataSource: Array.isArray(aCombinedData) && aCombinedData.length > 0 ? aCombinedData : [],  
-            fileName: `export.xlsx`  
-        };
-    
-        try {
-            const oSpreadsheet = new Spreadsheet(oSettings); 
-            oSpreadsheet.build()  
-                .finally(() => oSpreadsheet.destroy());  
-        } catch (error) {
-            console.error("Export failed:", error);  
-        }
     }
 
 
 
     public onExportGroup(): void {
         const oView = this.getView();
-        const oUserModel = oView.getModel("groupModel") as JSONModel;
-        const oGroupData = oUserModel?.getData() || {};
-        const oMembersModel = oView.getModel("groupMembersModel") as JSONModel;
-        const oMembersData = oMembersModel?.getData() || {};
-        const oRolecollectionModel = oView.getModel("rolecollectiondetails") as JSONModel;
-        const oRolecollectionData = oRolecollectionModel?.getData() || {};
-
-        console.log(oRolecollectionData.value);
-        const roleCollections = oRolecollectionData.value;
-        let aExcelData: any[] = [];
+        exportService.onExportGroup(oView);
         
-        
-        const groupId = oGroupData.id;
-        const groupName = oGroupData.displayName;
-        
-        const groupMembers = oGroupData.members;
-        
-       
-
-        
-        aExcelData.push({
-            id: groupId,
-            GroupName: groupName,
-            UserID: "",
-            "Display Name": "",
-            "Role Collection": "",
-            Role: ""
-        });
-        
-        groupMembers.forEach(member => {
-            aExcelData.push({
-                id: "",
-                GroupName: "",
-                UserID: member.value || "",
-                "Display Name": member.display || "",
-                "Role Collection": "",
-                Role: ""
-            });
-        });
-        
-        Object.entries(roleCollections).forEach(([roleCollection, roles]) => {
-            if (Array.isArray(roles)) {
-                roles.forEach(role => {
-                    aExcelData.push({
-                        id: "",
-                        GroupName: "",
-                        UserID: "",
-                        "Display Name": "",
-                        "Role Collection": roleCollection,
-                        Role: role
-                    });
-                });
-            }
-        });
-        
-        
-
-        aExcelData[0] = {...aExcelData[0], ...{id: groupId, GroupName: groupName }}
-        console.log(aExcelData);
-            
-    
-    
-            
-        
-    
-    
-        const aColumns = [
-            { label: "Group ID", property: "id" },
-            { label: "Group Name", property: "GroupName" },
-            { label: "UserID", property: "UserID" },
-            { label: "Display Name", property: "Display Name" },
-            { label: "Role Collection", property: "Role Collection" },
-            { label: "Role", property: "Role" }
-        ];
-    
-        const oSettings = {
-            workbook: {
-                columns: aColumns
-            },
-            dataSource: aExcelData,
-            fileName: `Groups_Export.xlsx`
-        };
-    
-        try {
-            const oSpreadsheet = new Spreadsheet(oSettings);
-            oSpreadsheet.build().finally(() => oSpreadsheet.destroy());
-        } catch (error) {
-            console.error("Export failed:", error);
-        }
-
-
-
-
-
-
-    
-        
-        
-       
     }
     
-
-   
-
-
 
 }
