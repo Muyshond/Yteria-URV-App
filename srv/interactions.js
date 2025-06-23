@@ -3,9 +3,9 @@ const cds = require('@sap/cds');
 module.exports = cds.service.impl(async function () {
 
     
-    const url = "https://adruyadgk.trial-accounts.ondemand.com/service/scim/Users";
-    const clientid = "976a672a-f46c-4340-bf8e-f0bc9c636ea4"
-    const clientsecret = "doLAg_EfYVOss].suaSs=WmNo=BrQbQk"
+    const url = "https://ag7jbtfkw.trial-accounts.ondemand.com/service/scim/Users";
+    const clientid = "7cf4f5fe-f631-4f70-85f7-984c2ef642e5"
+    const clientsecret = "T?Bs3m7_Ag@X3VlYFVaiTTEhpjy=z][A3i7"
 
 
     this.on('getIASUsers', async (req) => {7
@@ -120,9 +120,9 @@ module.exports = cds.service.impl(async function () {
 
 
     async function getjwt() {
-        const url = "https://64b4765dtrial.authentication.us10.hana.ondemand.com/oauth/token";
-        const client = "sb-na-7f7c1b12-d578-4563-a01e-4959c896365d!a396111";
-        const secret = "288aa128-433a-4f39-9b69-4cd8d98ddeba$rNqufHgZe6QrIQBFc6Bt3dqpWaeQ0wCcMtPkYBBOcYs=";
+        const url = "https://fd67edbatrial.authentication.us10.hana.ondemand.com/oauth/token";
+        const client = "sb-na-7e2c147a-2ecb-4bea-90f8-3ec031b884a6!a444990";
+        const secret = "0c210129-4c0d-499a-9315-ec9e6cf26748$kxHbNKL8EZtDtpspzJumc3urqZcZq3A33wT6vdlMl7o=";
         const authHeader = "Basic " + Buffer.from(client + ":" + secret).toString("base64");
     
         try {
@@ -217,7 +217,7 @@ module.exports = cds.service.impl(async function () {
             const authHeader = "Basic " + Buffer.from(clientid + ":" + clientsecret).toString("base64");
             do {
                 console.log(`Start loading IAS UserGroups from ${idx}`);
-                response = await fetch(`https://adruyadgk.trial-accounts.ondemand.com/service/scim/Groups?startIndex=${idx}`, {
+                response = await fetch(`https://ag7jbtfkw.trial-accounts.ondemand.com/service/scim/Groups?startIndex=${idx}`, {
                     headers: {
                         "Authorization": authHeader
                     },
@@ -260,7 +260,7 @@ module.exports = cds.service.impl(async function () {
             const authHeader = "Basic " + Buffer.from(clientid + ":" + clientsecret).toString("base64");
             do {
                 console.log(`Start loading IAS Users from ${idx}`);
-                response = await fetch(`https://adruyadgk.trial-accounts.ondemand.com/service/scim/Users?startIndex=${idx}`, {
+                response = await fetch(`https://ag7jbtfkw.trial-accounts.ondemand.com/service/scim/Users?startIndex=${idx}`, {
                     headers: {
                         "Authorization": authHeader
                     },
