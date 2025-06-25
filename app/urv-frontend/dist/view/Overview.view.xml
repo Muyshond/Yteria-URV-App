@@ -13,6 +13,15 @@
                 
             </items>
         </Select>
+
+
+        <Select id="selectCIS" >
+            <items>
+                <core:ListItem key="dev" text="dev" />
+                <core:ListItem key="prod" text="prod" />
+                
+            </items>
+        </Select>
     </FlexBox>
     <Button id="userButton" text="Search" type="Emphasized" press="getUser" />
 
