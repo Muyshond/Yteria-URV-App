@@ -7,11 +7,14 @@ export default class dataService {
 
     static async getGroup(id: string, oView: any){
         try {
+            const selectinput = oView?.byId("selectCIS") as sap.m.select;
+            const selectedvalue = selectinput.getSelectedItem();
             console.log("hfqsdjklhfjkqslhdfjkqlshdfjklqsmhdfjkSDHJKQSL")
 
             const oModel = oView?.getModel() as sap.ui.model.odata.v4.ODataModel;
             const oBinding = oModel.bindContext(`/getGroupByName(...)`, undefined, {});
             oBinding.setParameter("GroupName", id);
+            oBinding.setParameter("btp", selectedvalue.mProperties.key);
 
             const data = await oBinding.execute()
                 .then(() => {
@@ -38,9 +41,14 @@ export default class dataService {
 
     static async getRolecollectionRoles(roleCollection: string, oView: any){
         try {
+            const selectinput = oView?.byId("selectCIS") as sap.m.select;
+            const selectedvalue = selectinput.getSelectedItem();
+
             const oModel = oView.getModel() as sap.ui.model.odata.v4.ODataModel;
             const oBinding = oModel.bindContext(`/getRoleCollectionRoles(...)`, undefined, {});
             oBinding.setParameter("roleCollectionName", roleCollection);
+            oBinding.setParameter("btp", selectedvalue.mProperties.key);
+
             const data = oBinding.execute()
                 .then(() => {
                     const oContext = oBinding.getBoundContext();
@@ -63,10 +71,13 @@ export default class dataService {
     static async getRoleCollections(oView: any){
         try {
 
-            
+            const selectinput = oView?.byId("selectCIS") as sap.m.select;
+            const selectedvalue = selectinput.getSelectedItem();
+
             const oModel = oView.getModel() as sap.ui.model.odata.v4.ODataModel;
             const oBinding = oModel.bindContext(`/getRoleCollections(...)`, undefined, {});
-            
+            oBinding.setParameter("btp", selectedvalue.mProperties.key);
+
             const data = oBinding.execute()
                 .then(() => {
                     const oContext = oBinding.getBoundContext();
@@ -91,9 +102,13 @@ export default class dataService {
 
     static async getIASUser(userid: string, oView: any) {
         try {
+            const selectinput = oView?.byId("selectCIS") as sap.m.select;
+            const selectedvalue = selectinput.getSelectedItem();
+
             const oModel = oView.getModel() as sap.ui.model.odata.v4.ODataModel;
             const oBinding = oModel.bindContext(`/getIASUser(...)`, undefined, {});
             oBinding.setParameter("id", userid);
+            oBinding.setParameter("btp", selectedvalue.mProperties.key);
 
             const data = oBinding.execute()
                 .then(() => {
@@ -119,10 +134,12 @@ export default class dataService {
 
     static async getGroupByWord(id: string, oView: any){
         try {
-
+            const selectinput = oView?.byId("selectCIS") as sap.m.select;
+            const selectedvalue = selectinput.getSelectedItem();
             const oModel = oView.getModel() as sap.ui.model.odata.v4.ODataModel;
             const oBinding = oModel.bindContext(`/getGroupByWord(...)`, undefined, {});
             oBinding.setParameter("GroupName", id);
+            oBinding.setParameter("btp", selectedvalue.mProperties.key);
 
             const data = await oBinding.execute()
                 .then(() => {
@@ -147,10 +164,14 @@ export default class dataService {
 
     static async getUserByWord(id: string, oView: any){
         try {
+            const selectinput = oView?.byId("selectCIS") as sap.m.select;
+            const selectedvalue = selectinput.getSelectedItem();
+            console.log(selectedvalue.mProperties.key)
 
             const oModel = oView.getModel() as sap.ui.model.odata.v4.ODataModel;
             const oBinding = oModel.bindContext(`/getUserByWord(...)`, undefined, {});
             oBinding.setParameter("id", id);
+            oBinding.setParameter("btp", selectedvalue.mProperties.key);
 
             const data = await oBinding.execute()
                 .then(() => {

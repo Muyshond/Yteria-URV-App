@@ -3,7 +3,7 @@ service CatalogService {
 
     
 
-    function getIASUsers() returns array of {
+    function getIASUsers(btp: String) returns array of {
         id: String;
         userName: String;
         name: {
@@ -13,7 +13,7 @@ service CatalogService {
         active: Boolean;
     };
 
-    function getIASUser(id: String) returns array of {
+    function getIASUser(id: String, btp: String) returns array of {
         id: String;
         userName: String;
         name: {
@@ -23,28 +23,32 @@ service CatalogService {
         active: Boolean;
     };
 
-    function getRoleCollections() returns array of {
+    function getRoleCollections(btp: String) returns array of {
 
     };
 
-    function getRoleCollectionRoles(roleCollectionName: String) returns array of {
+    function getRoleCollectionRoles(roleCollectionName: String, btp: String) returns array of {
         
     };
 
-    function getGroups(GroupID: String) returns array of {
+    function getGroups(GroupID: String, btp: String) returns array of {
         
     };
 
-    function getGroupByName(GroupName: String) returns array of{
+    function getGroupByName(GroupName: String, btp: String) returns array of{
 
     };
     
-    function getGroupByWord(GroupName: String) returns array of{
+    function getGroupByWord(GroupName: String, btp: String) returns array of{
 
     };
 
-    function getUserByWord(id: String) returns array of{
+    function getUserByWord(id: String, btp: String) returns array of{
 
     };
     
+
+    
+
+
 }

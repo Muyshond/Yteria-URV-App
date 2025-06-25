@@ -170,9 +170,9 @@ export default class Overview extends Controller {
     public async setUser(userID: any){
         const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
         const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
-
+        
         const user: any = await dataService.getIASUser(userID, this.getView());
-            
+            console.log(user)
             const userdata = user[0]
             this.setUserDetails(userdata);
             const grouprolerelationship = await this.getUserCollectionsViaGroup(userdata)
