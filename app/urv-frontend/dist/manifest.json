@@ -24,6 +24,23 @@
                     "odataVersion": "4.0"
                 }
             }
+        },
+        "crossNavigation": {
+            "inbounds": {
+                "intent1": {
+                    "semanticObject": "UrvFrontend",
+                    "action": "display",
+                    "title": "URV Frontend App",
+                    "signature": {
+                        "parameters": {}
+                    },
+                    "resolutionResult": {
+                        "applicationType": "SAPUI5",
+                        "additionalInformation": "SAPUI5.Component=urvfrontend",
+                        "url": "/urvfrontend"
+                    }
+                }
+            }
         }
     },
     "sap.ui": {
