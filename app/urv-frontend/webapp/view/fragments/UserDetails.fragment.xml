@@ -1,0 +1,20 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <Panel id="userdetails" headerText="User details">
+        <headerToolbar>
+            <OverflowToolbar>
+                <Title text="User details" level="H2"/>
+                <ToolbarSpacer/>
+                <Button text="Export to Excel" icon="sap-icon://excel-attachment" press="onExportUser"/>
+            </OverflowToolbar>
+        </headerToolbar>
+        <content>
+            <VBox class="sapUiSmallMargin">
+                <Text text="User ID: {userModel>/id}" />
+                <Text text="Name: {userModel>/name/givenName} {userModel>/name/familyName}" />
+                <Text text="Email: {userModel>/emails/0/value}" />
+                <Text text="User Type: {userModel>/userType}" />
+                <Text text="Status: {userModel>/userUuid}" />
+            </VBox>
+        </content>
+    </Panel>
+</core:FragmentDefinition>

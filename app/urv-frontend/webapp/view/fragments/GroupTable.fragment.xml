@@ -1,0 +1,25 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <Panel id="grouptable" headerText="Select a Group">
+    <VBox>
+        
+
+        <Table id="groupsTable2" items="{tablegroups>/value}" 
+               mode="SingleSelectMaster" 
+               itemPress="onGroupPress">
+               
+            <columns>
+                <Column>
+                    <Text text="Group Name" />
+                </Column>
+            </columns>
+            <items>
+                <ColumnListItem type="Active">
+                    <cells>
+                        <Text text="{tablegroups>displayName}" />
+                    </cells>
+                </ColumnListItem>
+            </items>
+        </Table>
+    </VBox> 
+</Panel>
+</core:FragmentDefinition>

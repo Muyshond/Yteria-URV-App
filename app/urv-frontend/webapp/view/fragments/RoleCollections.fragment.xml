@@ -1,0 +1,13 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+
+    <Panel id="rolecollections" headerText="RoleCollections">
+        <SearchField 
+            width="100%" 
+            placeholder="Search in groups..." 
+            liveChange=".onSearch2" />
+        <Tree id="RoleTree2" items="{TreeModel2>/tree}" mode="None">
+            <StandardTreeItem title="{TreeModel2>name}" icon="{TreeModel2>icon}" />
+        </Tree>
+    </Panel>
+
+</core:FragmentDefinition>

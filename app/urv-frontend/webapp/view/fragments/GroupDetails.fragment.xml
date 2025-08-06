@@ -1,0 +1,37 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <Panel id="groupdetails">
+    <headerToolbar>
+            <OverflowToolbar>
+                <Title text="User details" level="H2"/>
+                <ToolbarSpacer/>
+                <Button text="Export to Excel" icon="sap-icon://excel-attachment" press="onExportGroup"/>
+            </OverflowToolbar>
+        </headerToolbar>
+        
+        <content >
+            <VBox class="sapUiSmallMargin" >
+                <Text text="Display name: {groupModel>/displayName}" />
+                <Text text="id: {groupModel>/id}" />
+            </VBox>
+        </content>
+        <Table id="groupMembersTable" items="{groupMembersModel>/members}" headerText="Group members">
+        
+            <columns>
+                <Column>
+                    <Text text="User ID"/>
+                </Column>
+                <Column>
+                    <Text text="Display Name"/>
+                </Column>
+            </columns>
+            <items>
+                <ColumnListItem>
+                    <cells>
+                        <Text text="{groupMembersModel>value}"/>
+                        <Text text="{groupMembersModel>display}"/>
+                    </cells>
+                </ColumnListItem>
+            </items>
+        </Table>
+    </Panel>
+</core:FragmentDefinition>
