@@ -7,7 +7,7 @@
         id="UserID"
         placeholder="Search by User ID"
         liveChange="onLiveChange"
-        search="getUser"/>
+        search="getData"/>
         <Select id="select" >
             <items>
                 <core:ListItem key="user" text="Search by UserID" icon="sap-icon://person-placeholder"/>

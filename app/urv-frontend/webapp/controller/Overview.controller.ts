@@ -22,16 +22,102 @@ export default class Overview extends Controller {
         document.addEventListener("keydown", this.onKeyDown.bind(this));
     }
 
+
+    //Search for data when enter is pressed.
     private onKeyDown(event: KeyboardEvent): void {
         if (event.key === "Enter") {
-            this.getUser();
+            this.getData();
         }
     }
     
+    
+    public getData() {
+        const userInput = this.getUserInput();
+        if (userInput.trim() === "") {MessageToast.show("Please enter a valid ID"); return } 
 
-    public async getUser() {
+
+        const searchMode = this.getSearchmode();
+        console.log(searchMode)
+        if (searchMode === "group") {
+            this.HandleGroupSearch(userInput);
+
+        } else if (searchMode === "user") {
+            this.HandleUserSearch(userInput);
+        }
+    }
+
+
+    public getUserInput(){
+        const userInput = this.getView()?.byId("UserID") as sap.m.Input;
+        return userInput.getValue();
+    }
+
+    public getSearchmode() {
+        const selectinput = this.getView()?.byId("select") as sap.m.select;
+        return selectinput.getSelectedItem().mProperties.key;
+    }
+
+
+    public async HandleGroupSearch(groupID: string) {
+
+        const groups = await dataService.getGroupByWord(groupID, this.getView());
+        //Error in cap backend
+        if (groups.value[0] === "Error fetching group") {
+            return MessageToast.show(`There went something wrong while trying to fetch the groups`);
+        //No groups found
+        } else if (groups.value.length === 0) {
+            return MessageToast.show(`No groups found for "${groupID}"`);
+        //One group found
+        }else if (groups.value.length === 1){
+            //No group found for ID
+            if(groups.value[0] === "Group not found"){
+                return MessageToast.show(`No groups found for "${groupID}"`);
+            //exact match => set group directly
+            } else if(groups.value[0].displayName === groupID){
+                
+                return;
+            //Set groups in table so user can choose
+            } else{
+                const oJSONModel = new JSONModel({ value: groups.value });
+                this.getView()?.setModel(oJSONModel, "tablegroups"); 
+                return;
+            }
+        //List of groups found
+        } else if (groups.value.length > 1){
+            groups.value.forEach((group: { displayName: string }) => {
+                //exact match so pick this one
+                if (group.displayName === groupID) {
+                    
+                    return;
+                }
+            });
+            const oJSONModel = new JSONModel({ value: groups.value });
+            this.getView()?.setModel(oJSONModel, "tablegroups"); 
+            return;
+            //this.getView()?.setModel(null, "tablegroups"); // unset the model
+        }
+    }
+
+    public async HandleUserSearch(userID: string){
+        const users = await dataService.getUserByWord(userID, this.getView());
+        console.log(users)
+        if (users.value[0] === "Error fetching User") {
+            return MessageToast.show(`There went something wrong while trying to fetch the users`);
+        //No groups found
+        } else if (users.value.length === 0) {
+            return MessageToast.show(`No groups found for "${userID}"`);
+        //One group found
+        }
+    }
+
+
     
 
+
+
+
+//VERNADER DEZE FUNCTIE MET KLEINERE FUNCTIES
+    public async getx() {
         const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
         const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
         const grouptable = this.getView()?.byId("grouptable") as sap.m.panel;
@@ -39,12 +125,13 @@ export default class Overview extends Controller {
 
         const userInput = this.getView()?.byId("UserID") as sap.m.Input;
         const userID = userInput.getValue();
-        if(userID === ""){
+        if(userID.trim() === ""){
             MessageToast.show("Please enter a valid ID");
             return;
         }
         const selectinput = this.getView()?.byId("select") as sap.m.select;
         const selectedvalue = selectinput.getSelectedItem();
+
         //ZOEK OP GROUP
         if(selectedvalue.mProperties.key === "group"){
             usertable.setVisible(false);
@@ -104,14 +191,10 @@ export default class Overview extends Controller {
                 }
             }
                 
-        
-        
-
         //ZOEK OP USER
         } else if(selectedvalue.mProperties.key === "user"){
             grouptable.setVisible(false);
             grouppanel.setVisible(false);
-                
             const users = await dataService.getUserByWord(userID, this.getView());
             console.log(users)
             if(users.value.length === 0){
@@ -140,7 +223,6 @@ export default class Overview extends Controller {
                     const oJSONModel = new JSONModel({ value: users.value });
                     this.getView().setModel(oJSONModel, "tableusers"); 
                 }
-
             } else if (users.value.length === 1){
                 console.log(users.value[0])
                 if(users.value[0] === "User not found"){
@@ -157,9 +239,7 @@ export default class Overview extends Controller {
                     const oJSONModel = new JSONModel({ value: users.value });
                     this.getView().setModel(oJSONModel, "tableusers");
                 }
-                
             }
-            
         } 
     }
     
