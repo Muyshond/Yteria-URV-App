@@ -24,13 +24,10 @@ export default class Overview extends Controller {
 
     private onKeyDown(event: KeyboardEvent): void {
         if (event.key === "Enter") {
-            console.log("Pressed Enter");
             this.getUser();
         }
     }
     
-    
-
 
     public async getUser() {
     
@@ -412,8 +409,6 @@ export default class Overview extends Controller {
         exportService.onExportUser(oView);
         
     }
-
-
 
     public onExportGroup(): void {
         const oView = this.getView();

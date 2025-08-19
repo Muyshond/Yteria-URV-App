@@ -1,5 +1,5 @@
 {
-  "xsappname": "ypto-urv-application",
+  "xsappname": "benmbsworkzoneanalyticsplugin",
   "tenant-mode": "dedicated",
   "description": "Security profile of called application",
   "scopes": [
