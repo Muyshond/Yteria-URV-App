@@ -1,6 +1,6 @@
 <core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
 
-    <Panel id="rolecollections" headerText="RoleCollections">
+    <Panel id="rolecollections" headerText="RoleCollections" >
         <SearchField 
             width="100%" 
             placeholder="Search in groups..." 
