@@ -1,168 +1,43 @@
-<mvc:View xmlns:smarttable="sap.ui.comp.smarttable" controllerName="urvfrontend.controller.Overview"
+<mvc:View xmlns:smarttable="sap.ui.comp.smarttable" xmlns="sap.m"  controllerName="urvfrontend.controller.Overview"
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns="sap.m"
         xmlns:core="sap.ui.core">
 
-<Page id="page" title="URV TOOL">
-    <FlexBox direction="Row" alignItems="Center"  >
-        <Input id="UserID" placeholder="User ID" liveChange="onLiveChange"  />
-        <Select id="select" >
-            <items>
-                <core:ListItem key="user" text="Search by UserID" icon="sap-icon://person-placeholder"/>
-                <core:ListItem key="group" text="Search by group" icon="sap-icon://group"/>
-                
-            </items>
-        </Select>
+    <Shell id="main">
+        <VBox id="vbox">
+            <SearchField
+            id="UserID"
+            placeholder="Search by ID"
+            liveChange="onLiveChange"
+            search="getData"/>
+            <Select id="select"  change=".onHandleSearchmodeChange">
+                <items>
+                    <core:ListItem id="user" key="user" text="Search by UserID" icon="sap-icon://person-placeholder"/>
+                    <core:ListItem id="group" key="group" text="Search by group" icon="sap-icon://group"/>
 
+                </items>
+            </Select>
 
-        <Select id="selectCIS" >
-            <items>
-                <core:ListItem key="dev" text="dev" />
-                <core:ListItem key="prod" text="prod" />
-                
-            </items>
-        </Select>
-    </FlexBox>
-    <Button id="userButton" text="Search" type="Emphasized" press="getUser" />
-
-<Panel id="usertable" visible="false" headerText="Select a user">
-    <VBox>
-        <Table id="usersTable" items="{tableusers>/value}" mode="SingleSelectMaster" itemPress="onUserPress">
-        
-            <columns>
-                <Column>
-                    <Text text="ID" />
-                </Column>
-                <Column>
-                    <Text text="First Name" />
-                </Column>
-                <Column>
-                    <Text text="Last Name" />
-                </Column>
-            </columns>
-            <items>
-                <ColumnListItem press="onUserPress" type="Active">
-                    <cells>
-                        <Text text="{tableusers>id}" />
-                        <Text text="{tableusers>name/givenName}" />
-                        <Text text="{tableusers>name/familyName}" />
-                    </cells>
-                </ColumnListItem>
-            </items>
-        </Table>
-    </VBox>
-</Panel>
-
-<Panel id="byUserId" visible="false">
-    <Panel id="userdetails" headerText="User details">
-        <headerToolbar>
-            <OverflowToolbar>
-                <Title text="User details" level="H2"/>
-                <ToolbarSpacer/>
-                <Button text="Export to Excel" icon="sap-icon://excel-attachment" press="onExportUser"/>
-            </OverflowToolbar>
-        </headerToolbar>
-        <content>
-            <VBox class="sapUiSmallMargin">
-                <Text text="User ID: {userModel>/id}" />
-                <Text text="Name: {userModel>/name/givenName} {userModel>/name/familyName}" />
-                <Text text="Email: {userModel>/emails/0/value}" />
-                <Text text="User Type: {userModel>/userType}" />
-                <Text text="Status: {userModel>/userUuid}" />
-            </VBox>
-        </content>
-    </Panel>
-
-    <Panel id="groups" headerText="Groups">
-        <SearchField 
-            width="100%" 
-            placeholder="Search in groups..." 
-            liveChange=".onSearch" />
-        <Tree id="RoleTree" items="{TreeModel>/tree}" mode="None">
-            <StandardTreeItem title="{TreeModel>name}" icon="{TreeModel>icon}" />
-        </Tree>
-    </Panel>
-</Panel>
-
-<Panel id="grouptable" visible="false" headerText="Select a Group">
-    <VBox>
-        
-
-        <Table id="groupsTable2" items="{tablegroups>/value}" 
-               mode="SingleSelectMaster" 
-               itemPress="onGroupPress">
-               
-            <columns>
-                <Column>
-                    <Text text="Group Name" />
-                </Column>
-            </columns>
-            <items>
-                <ColumnListItem type="Active">
-                    <cells>
-                        <Text text="{tablegroups>displayName}" />
-                    </cells>
-                </ColumnListItem>
-            </items>
-        </Table>
-    </VBox> 
-</Panel>
-
-
-
-<Panel id="bygroup" visible="false" headerText="Group details">
-    <Panel id="groupdetails">
-    <headerToolbar>
-            <OverflowToolbar>
-                <Title text="User details" level="H2"/>
-                <ToolbarSpacer/>
-                <Button text="Export to Excel" icon="sap-icon://excel-attachment" press="onExportGroup"/>
-            </OverflowToolbar>
-        </headerToolbar>
-        
-        <content >
-            <VBox class="sapUiSmallMargin" >
-                <Text text="Display name: {groupModel>/displayName}" />
-                <Text text="id: {groupModel>/id}" />
-            </VBox>
-        </content>
-        <Table id="groupMembersTable" items="{groupMembersModel>/members}" headerText="Group members">
-        
-            <columns>
-                <Column>
-                    <Text text="User ID"/>
-                </Column>
-                <Column>
-                    <Text text="Display Name"/>
-                </Column>
-            </columns>
-            <items>
-                <ColumnListItem>
-                    <cells>
-                        <Text text="{groupMembersModel>value}"/>
-                        <Text text="{groupMembersModel>display}"/>
-                    </cells>
-                </ColumnListItem>
-            </items>
-        </Table>
-    </Panel>
-
-    <Panel id="rolecollections" headerText="RoleCollections">
-        <SearchField 
-            width="100%" 
-            placeholder="Search in groups..." 
-            liveChange=".onSearch2" />
-        <Tree id="RoleTree2" items="{TreeModel2>/tree}" mode="None">
-            <StandardTreeItem title="{TreeModel2>name}" icon="{TreeModel2>icon}" />
-        </Tree>
-    </Panel>
-
-</Panel>
+            <Select id="selectCIS" >
+                <items>
+                    <core:ListItem id="dev" key="dev" text="dev" />
+                    <core:ListItem id="prod" key="prod" text="prod" />
+                </items>
+            </Select>
 
 
 
 
-    
-    </Page>
-    
+
+            <core:Fragment fragmentName="urvfrontend.view.fragments.UserTable" type="XML"/>
+            <core:Fragment fragmentName="urvfrontend.view.fragments.UserDetails" type="XML"/>
+
+            <core:Fragment fragmentName="urvfrontend.view.fragments.GroupTable" type="XML"/>
+
+            <core:Fragment fragmentName="urvfrontend.view.fragments.GroupDetails" type="XML"/>
+
+            <core:Fragment fragmentName="urvfrontend.view.fragments.RoleCollections" type="XML"/>
+
+        </VBox>
+    </Shell>
 </mvc:View>
+

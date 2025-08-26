@@ -1,15 +1,9 @@
 import MessageToast from "sap/m/MessageToast";
 import Controller from "sap/ui/core/mvc/Controller";
-import { form } from "sap/ui/layout/library";
 import JSONModel from "sap/ui/model/json/JSONModel";
-import Filter from "sap/ui/model/Filter";
-import FilterOperator from "sap/ui/model/FilterOperator";
-import containsOrEquals from "sap/ui/dom/containsOrEquals";
-import { foreach } from "@sap/cds";
-import Spreadsheet from "sap/ui/export/Spreadsheet";
-import testService from "../service/testService"; 
 import dataService from "../service/dataService"; 
 import exportService from "../service/exportService"; 
+import BusyIndicator from "sap/ui/core/BusyIndicator";
 
 
 /**
@@ -20,198 +14,225 @@ export default class Overview extends Controller {
     /*eslint-disable @typescript-eslint/no-empty-function*/
     public onInit(): void {
         document.addEventListener("keydown", this.onKeyDown.bind(this));
+        const view = this.getView();
+        const initialModels: Record<string, any> = {
+            tablegroups: {  },
+            tableusers: {  },
+            groupdetails: {  },
+            rolecollectiondetails: { },
+            TreeModel: { },
+            TreeModel2: { },
+            userModel: {},
+            groupModel: {},
+            groupMembersModel: {  }
+        };
+
+        Object.entries(initialModels).forEach(([name, data]) => {
+            const oJSONModel = new JSONModel(data);
+            view?.setModel(oJSONModel, name);
+        });
     }
 
+        //Search for data when enter is pressed.
     private onKeyDown(event: KeyboardEvent): void {
         if (event.key === "Enter") {
-            console.log("Pressed Enter");
-            this.getUser();
+            this.getData();
         }
     }
     
     
+    public getData() {
+        const userInput = this.getUserInput();
+        if (userInput.trim() === "") { MessageToast.show("Please enter a valid ID"); return } 
 
 
-    public async getUser() {
-    
-
-        const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
-        const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
-        const grouptable = this.getView()?.byId("grouptable") as sap.m.panel;
-        const usertable = this.getView()?.byId("usertable") as sap.m.panel;
-
-        const userInput = this.getView()?.byId("UserID") as sap.m.Input;
-        const userID = userInput.getValue();
-        if(userID === ""){
-            MessageToast.show("Please enter a valid ID");
-            return;
+        const searchMode = this.getSearchmode();
+        if (searchMode === "group") {
+            this.HandleGroupSearch(userInput);
+        } else if (searchMode === "user") {
+            this.HandleUserSearch(userInput);
         }
+    }
+
+    private showBusy(): void {
+        BusyIndicator.show(0); 
+    }
+
+    private hideBusy(): void {
+        BusyIndicator.hide();
+    }
+
+    public getUserInput(){
+        const userInput = this.getView()?.byId("UserID") as sap.m.Input;
+        return userInput.getValue();
+    }
+
+    public getSearchmode() {
         const selectinput = this.getView()?.byId("select") as sap.m.select;
-        const selectedvalue = selectinput.getSelectedItem();
-        //ZOEK OP GROUP
-        if(selectedvalue.mProperties.key === "group"){
-            usertable.setVisible(false);
-            userpanel.setVisible(false)
-            const groups = await dataService.getGroupByWord(userID, this.getView());
-            console.log(groups.value.length)
-            if(groups.value.length === 0){
-                MessageToast.show("There are no groups that include " + userID);
-                grouppanel.setVisible(false);
-                grouptable.setVisible(false);
-                userpanel.setVisible(false);
-                usertable.setVisible(false);
-                return;
-
-                //Kan meerdere in lijst zitten maar niet getoond worden omdat er altijd 2 inzitten => Group en Group 2.
-                //Group matches exact maar toch 2 in lijst.
-            } else if(groups.value.length > 1 ){
-                let exactMatch = false;
-    
-                groups.value.forEach((group: { displayName: string }) => {
-                    if (group.displayName === userID) {
-                        exactMatch = true;
-                    }
-                });
-
-                if(exactMatch){
-                    this.setGroup(userID);
-                    grouptable.setVisible(false);
-                    
-                    return;
-
-                }else{
-                    grouppanel.setVisible(false);
-                    grouptable.setVisible(true);
-                    const oJSONModel = new JSONModel({ value: groups.value });
-                    this.getView().setModel(oJSONModel, "tablegroups"); 
-                }
-            
-               
+        return selectinput.getSelectedItem().mProperties.key;
+    }
 
 
-                //IN ORDE 
-            } else if(groups.value.length === 1){
-                console.log(groups.value[0])
+    public async HandleGroupSearch(groupID: string) {
+        this.showBusy();
+
+        try{        
+            const groups = await dataService.getGroupByWord(groupID, this.getView());
+            if (groups === undefined) {
+                return MessageToast.show(`There went something wrong while trying to fetch the groups`);
+            } else if (groups.value.length === 0) {
+                this.clearJsonModel("tablegroups");
+                return MessageToast.show(`No groups found for "${groupID}"`);
+            }else if (groups.value.length === 1){
                 if(groups.value[0] === "Group not found"){
+                    return MessageToast.show(`No groups found for "${groupID}"`);
+                //exact match => set group directly
+                } else if(groups.value[0].displayName === groupID){
+                    this.setGroup(groupID);
                     return;
-                }
-                else if(groups.value[0].displayName === userID){
-                    this.setGroup(userID);
-                    grouptable.setVisible(false);
-                    return;
+                //Set groups in table so user can choose
                 } else{
-                    grouppanel.setVisible(false);
-                    grouptable.setVisible(true);
                     const oJSONModel = new JSONModel({ value: groups.value });
-                    this.getView().setModel(oJSONModel, "tablegroups");
+                    this.getView()?.setModel(oJSONModel, "tablegroups"); 
+                    return;
                 }
-            }
-                
-        
-        
-
-        //ZOEK OP USER
-        } else if(selectedvalue.mProperties.key === "user"){
-            grouptable.setVisible(false);
-            grouppanel.setVisible(false);
-                
-            const users = await dataService.getUserByWord(userID, this.getView());
-            console.log(users)
-            if(users.value.length === 0){
-                MessageToast.show("There are no Users that include " + userID);
-                grouppanel.setVisible(false);
-                grouptable.setVisible(false);
-                userpanel.setVisible(false);
-                usertable.setVisible(false);
-                return;
-            } else if(users.value.length > 1){
-                let exactMatch = false;
-    
-                users.value.forEach((user: { id: string }) => {
-                    if (user.id === userID) {
-                        exactMatch = true;
+            } else if (groups.value.length > 1){
+                groups.value.forEach((group: { displayName: string }) => {
+                    if (group.displayName === groupID) {
+                        this.setGroup(groupID);
+                        return;
                     }
                 });
+                const oJSONModel = new JSONModel({ value: groups.value });
+                this.getView()?.setModel(oJSONModel, "tablegroups"); 
+                return;
+            }
+        } catch (error) {
+            MessageToast.show(`Error fetching groups: ${error}`);
+        } finally {
+            this.hideBusy();
+        }
+    }
 
-                if(exactMatch){
-                    this.setUser(userID);
-                    usertable.setVisible(false);
-                    return;
-                }else{
-                    userpanel.setVisible(false);
-                    usertable.setVisible(true);
-                    const oJSONModel = new JSONModel({ value: users.value });
-                    this.getView().setModel(oJSONModel, "tableusers"); 
-                }
-
+    public async HandleUserSearch(userID: string){
+        this.showBusy()
+        try{
+            const users = await dataService.getUserByWord(userID, this.getView());
+            if (users === undefined) {
+                return MessageToast.show(`There went something wrong while trying to fetch the users`);
+            } else if (users.value.length === 0) {
+                this.clearJsonModel("tableusers");
+                return MessageToast.show(`No users found for "${userID}"`);
             } else if (users.value.length === 1){
-                console.log(users.value[0])
                 if(users.value[0] === "User not found"){
                     MessageToast.show("user not found")
                     return;
-                }
-                else if(users.value[0].id === userID){
-                    this.setUser(userID);
-                    usertable.setVisible(false);
+                } else if(users.value[0].id === userID){
+                    this.setUser(userID)
                     return;
                 } else{
-                    userpanel.setVisible(false);
-                    usertable.setVisible(true);
                     const oJSONModel = new JSONModel({ value: users.value });
-                    this.getView().setModel(oJSONModel, "tableusers");
+                    this.getView()?.setModel(oJSONModel, "tableusers");
                 }
-                
+            }else if(users.value.length > 1){
+                users.value.forEach((user: { id: string }) => {
+                    if (user.id === userID) {
+
+                        return;
+                    }
+                });
+                const oJSONModel = new JSONModel({ value: users.value });
+                this.getView()?.setModel(oJSONModel, "tableusers"); 
             }
-            
-        } 
+        } catch (error) {
+        MessageToast.show(`Error fetching groups: ${error}`);
+        } finally {
+        this.hideBusy();
+    }
     }
     
+    public clearJsonModel(modelName: string): void{
+        const oJSONModel = new JSONModel({ value: null });
+        this.getView()?.setModel(oJSONModel, modelName);
+    }
+
+
+    public clearAllJsonModels(): void {
+        const view = this.getView();
+        const modelNames = [
+        "tablegroups",
+        "tableusers",
+        "groupdetails",
+        "rolecollectiondetails",
+        "TreeModel",
+        "TreeModel2",
+        "userModel",
+        "groupModel",
+        "groupMembersModel"
+        ];
+        modelNames.forEach((name) => {
+            const model = view?.getModel(name) as JSONModel;
+            if (model) {
+                model.setData({});
+            }
+        });
+    }
+
+    public onHandleSearchmodeChange(): void {
+        MessageToast.show("Search mode changed");
+        this.clearAllJsonModels();
+        const searchmode = this.getSearchmode();
+
+        if(searchmode === "group"){
+
+        } else if (searchmode === "user"){
+
+        } else {
+            MessageToast.show("This searchmode is not supported");
+        }
+    }
+
 
     public async setUser(userID: any){
-        const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
-        const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
+       this.showBusy()
+        try{
+
         
         const user: any = await dataService.getIASUser(userID, this.getView());
-            console.log(user)
-            const userdata = user[0]
-            this.setUserDetails(userdata);
-            const grouprolerelationship = await this.getUserCollectionsViaGroup(userdata)
-            const formattedData = Object.entries(grouprolerelationship).map(([group, value]) => ({
-                group, 
-                roleCollections: value
-            }));
-            const result: any = {}
-            for (const { group, roleCollections } of formattedData) {
-                result[group] = {}; 
-        
-                for (const roleCollection of roleCollections) {
-                    const response = await dataService.getRolecollectionRoles(roleCollection, this.getView()); 
-                    const roleCollectionData = response?.value?.[0]; 
-                    const roles = roleCollectionData?.roleReferences?.map((role: any) => role.name) || [];
-    
-                    result[group][roleCollection] = roles;
-            }
-            const oJSONModel = new JSONModel({ value: result });
-            this.getView().setModel(oJSONModel, "groupdetails");
+        const userdata = user[0]
+        this.setUserDetails(userdata);
 
-            this.setDataToTree(result);
-            grouppanel.setVisible(false);
-            userpanel.setVisible(true);
+        const grouprolerelationship = await this.getUserCollectionsViaGroup(userdata);
+        const formattedData = Object.entries(grouprolerelationship).map(([group, value]) => ({
+            group, 
+            roleCollections: value
+        }));
+        const result: any = {}
+        for (const { group, roleCollections } of formattedData) {
+            result[group] = {}; 
+    
+            for (const roleCollection of roleCollections) {
+                const response = await dataService.getRolecollectionRoles(roleCollection, this.getView()); 
+                const roleCollectionData = response?.value?.[0]; 
+                const roles = roleCollectionData?.roleReferences?.map((role: any) => role.name) || [];
+
+                result[group][roleCollection] = roles;
+        }
+        const oJSONModel = new JSONModel({ value: result });
+        this.getView()?.setModel(oJSONModel, "groupdetails");        
         }   
 
-        
-        
-       
-        this.setDataToTree2(result);
-        grouppanel.setVisible(true);
-        userpanel.setVisible(false);
+        this.setRoleCollectionDataToTree(result);
         return;
+    }finally {
+        this.hideBusy();
+    }
     }
 
     public async setGroup(userID: any){
-
+        this.showBusy()
+        try{
         const group = await dataService.getGroup(userID, this.getView())
-        console.log(group)
                 const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
         const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
 
@@ -233,18 +254,20 @@ export default class Overview extends Controller {
         }
         
         const oJSONModel = new JSONModel({ value: result });
-        this.getView().setModel(oJSONModel, "rolecollectiondetails");   
+        this.getView()?.setModel(oJSONModel, "rolecollectiondetails");   
 
 
 
-        this.setDataToTree2(result);
-        grouppanel.setVisible(true);
-        userpanel.setVisible(false);
+        this.setGroupDataToTree(result);
+        
         return;
+        }finally {
+            this.hideBusy();
+        }
     }
 
 
-    public setDataToTree(data: any) {
+    public setRoleCollectionDataToTree(data: any) {
         const treeformat = Object.entries(data).map(([groupName, roleCollections]) => ({
             name: groupName,
             icon: "sap-icon://group", 
@@ -257,22 +280,28 @@ export default class Overview extends Controller {
                 }))
             }))
         }));
-        
         this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel");
     }
 
-    public setDataToTree2(data: Record<string, string[]>) {
-        const treeformat = Object.entries(data).map(([roleCollectionName, roles]) => ({
-            name: roleCollectionName,
-            icon: "sap-icon://manager",
-            children: roles.map((role: string) => ({
-                name: role,
-                icon: "sap-icon://role"
-            }))
-        }));
-
-        this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel2");
+    public setGroupDataToTree(data: Record<string, string[]>) {
+        try{
+            
+            const treeformat = Object.entries(data).map(([roleCollectionName, roles]) => ({
+                    name: roleCollectionName,
+                    icon: "sap-icon://manager",
+                    children: roles.map((role: string) => ({
+                        name: role,
+                        icon: "sap-icon://role"
+                    }))
+                }));
+            this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel");
+        }catch(error ) {
+            console.log(error)
+        }
+        
     }
+
+     
 
     public setUserDetails(userdata: any) {
         let oModel = this.getView()?.getModel("userModel") as JSONModel;
@@ -281,7 +310,6 @@ export default class Overview extends Controller {
             this.getView()?.setModel(oModel, "userModel");
         }
         oModel.setData(userdata);
-        console.log(userdata)
     }
 
     public setGroupDetails(groupdata: any) {
@@ -303,7 +331,6 @@ export default class Overview extends Controller {
         userGroups.forEach((group: any) => {
             groupRoleCollections[group] = [];
         });
-
         roleCollections.forEach((roleCollection: any) => {
             if (!roleCollection.groupReferences && !roleCollection.samlAttributeAssignment) {
                 return;
@@ -322,16 +349,12 @@ export default class Overview extends Controller {
     }
 
 
-
-
-
-
-
-
     onSearch(event: sap.ui.base.Event): void {
         const searchword: string = event.getParameter("newValue")?.toLowerCase() || "";
         const tree = this.byId("RoleTree") as sap.m.Tree;
+
         tree.expandToLevel(999); 
+
 
         const items = tree.getItems();
         if (!tree) return;
@@ -345,7 +368,6 @@ export default class Overview extends Controller {
                 const index = tree.indexOfItem(item);
                 const name: string = context.getProperty("name").toLowerCase();
                 if (name.includes(searchword)) {
-                    console.log(name + searchword)
                     item.setHighlight("Success")  
                 }else{
 
@@ -356,34 +378,7 @@ export default class Overview extends Controller {
         });
     }
 
-    onSearch2(event: sap.ui.base.Event): void {
-        const searchword: string = event.getParameter("newValue")?.toLowerCase() || "";
-        const tree = this.byId("RoleTree2") as sap.m.Tree;
-        tree.expandToLevel(999); 
-        const items = tree.getItems();
-        if (!tree) return;
-        if (!searchword) {
-            items.forEach((item: any) => item.setHighlight("None"));
-            return;
-        }
-        items.forEach((item: any) => {
-            const context = item.getBindingContext("TreeModel2");
-            if (context) {
-                const index = tree.indexOfItem(item);
-                const name: string = context.getProperty("name").toLowerCase();
-                if (name.includes(searchword)) {
-                    console.log(name + searchword)
-                    item.setHighlight("Success")  
-                }else{
-
-                    item.setHighlight("None");
-                    //tree.collapse(index);
-                }
-            }
-        });
-    }
-
-
+    
     onGroupPress(event: sap.ui.base.Event): void {
         const oSelectedItem = event.getParameter("listItem") as ColumnListItem; 
         const oContext = oSelectedItem.getBindingContext("tablegroups"); 
@@ -396,6 +391,8 @@ export default class Overview extends Controller {
 
         
     }
+
+
     onUserPress(event: sap.ui.base.Event): void {
         const oSelectedItem = event.getParameter("listItem") as ColumnListItem; 
         const oContext = oSelectedItem.getBindingContext("tableusers"); 
@@ -403,7 +400,6 @@ export default class Overview extends Controller {
 
         const oUserData = oContext.getObject() as { id: string }; 
         const userID = oUserData.id; 
-        console.log(userID)
         this.setUser(userID);
     }
 

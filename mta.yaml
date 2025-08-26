@@ -7,7 +7,6 @@ modules:
   type: nodejs
   path: gen/srv
   requires:
-  - name: Ypto-URV-Application-db
   - name: uaa_Ypto-URV-Application
   provides:
   - name: srv-api
@@ -18,13 +17,6 @@ modules:
     instances: 1
   build-parameters:
     builder: npm-ci
-- name: Ypto-URV-Application-db-deployer
-  type: hdb
-  path: gen/db
-  requires:
-  - name: Ypto-URV-Application-db
-  parameters:
-    buildpack: nodejs_buildpack
 - name: urv-frontend
   type: html5
   path: app/urv-frontend
@@ -80,11 +72,7 @@ modules:
   build-parameters:
     no-source: true
 resources:
-- name: Ypto-URV-Application-db
-  type: com.sap.xs.hdi-container
-  parameters:
-    service: hana
-    service-plan: hdi-shared
+
 - name: Ypto-URV-Application-repo-host
   type: org.cloudfoundry.managed-service
   parameters:
