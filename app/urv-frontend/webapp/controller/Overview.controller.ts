@@ -5,9 +5,7 @@ import JSONModel from "sap/ui/model/json/JSONModel";
 import Filter from "sap/ui/model/Filter";
 import FilterOperator from "sap/ui/model/FilterOperator";
 import containsOrEquals from "sap/ui/dom/containsOrEquals";
-import { foreach } from "@sap/cds";
 import Spreadsheet from "sap/ui/export/Spreadsheet";
-import testService from "../service/testService"; 
 import dataService from "../service/dataService"; 
 import exportService from "../service/exportService"; 
 
@@ -363,7 +361,7 @@ export default class Overview extends Controller {
         
     }
 
-    
+
     onUserPress(event: sap.ui.base.Event): void {
         const oSelectedItem = event.getParameter("listItem") as ColumnListItem; 
         const oContext = oSelectedItem.getBindingContext("tableusers"); 
