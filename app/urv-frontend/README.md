@@ -1,34 +1,30 @@
-## Application Details
-|               |
-| ------------- |
-|**Generation Date and Time**<br>Mon Feb 24 2025 13:24:53 GMT+0000 (Coordinated Universal Time)|
-|**App Generator**<br>@sap/generator-fiori-freestyle|
-|**App Generator Version**<br>1.16.4|
-|**Generation Platform**<br>SAP Business Application Studio|
-|**Template Used**<br>simple|
-|**Service Type**<br>Local Cap|
-|**Service URL**<br>http://localhost:4004/odata/v4/catalog/|
-|**Module Name**<br>urv-frontend|
-|**Application Title**<br>URV Application|
-|**Namespace**<br>|
-|**UI5 Theme**<br>sap_horizon|
-|**UI5 Version**<br>1.133.0|
-|**Enable Code Assist Libraries**<br>False|
-|**Enable TypeScript**<br>True|
-|**Add Eslint configuration**<br>False|
+# URV APP
+This app is meant to be used as an application to monitor roles, role collections and groups in your sap environment. 
 
-## urv-frontend
+## DEPLOY
+- In controller /odata, remove / to get data => issues with namespace
+- Build MTA.yaml
+- cf deploy mta_archives/...
 
-An SAP Fiori application.
+## Get BTP data
 
-### Starting the generated app
+GET TOKEN (jwt voor BTP role collections https://api.authentication.us10.hana.ondemand.com/sap/rest/authorization/v2/rolecollections)
+- Maak instance van Authorization and Trust Management Service (apiaccess, niet application of instance)
+    => create service key
 
--   This app has been generated using the SAP Fiori tools - App Generator, as part of the SAP Fiori tools suite.  In order to launch the generated app, simply start your CAP project and navigate to the following location in your browser:
+## Get CIS data
 
-http://localhost:4004/urvfrontend/index.html
-
-#### Pre-requisites:
-
-1. Active NodeJS LTS (Long Term Support) version and associated supported NPM version.  (See https://nodejs.org)
+GET TOKEN VOOR CIS 
+- Maak ADMINISTRATOR AAN (SYSTEM)
+- Hier secret aanmaken 
+- GET MET BASIC AUTH => id + secret.
+https://adruyadgk.trial-accounts.ondemand.com/service/scim/Groups
 
 
+### detailed version
+CIS GET SECRET / MAKE SECRET 
+1. Ga naar ADMINISTRATORS
+2. Ga naar create GEEN USER MAAR system
+3. Maak secret aan
+4. Gebruik secret voor CIS (BASIC AUTH)
+https://ag7jbtfkw.trial-accounts.ondemand.com/service/scim/Groups

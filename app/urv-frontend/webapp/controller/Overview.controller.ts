@@ -5,6 +5,7 @@ import JSONModel from "sap/ui/model/json/JSONModel";
 import Filter from "sap/ui/model/Filter";
 import FilterOperator from "sap/ui/model/FilterOperator";
 import containsOrEquals from "sap/ui/dom/containsOrEquals";
+import { foreach } from "@sap/cds";
 import Spreadsheet from "sap/ui/export/Spreadsheet";
 import testService from "../service/testService"; 
 import dataService from "../service/dataService"; 
@@ -19,18 +20,9 @@ export default class Overview extends Controller {
     /*eslint-disable @typescript-eslint/no-empty-function*/
     public onInit(): void {
         document.addEventListener("keydown", this.onKeyDown.bind(this));
-        var model = new JSONModel({
-            id: null,
-        });
-
-    // Set the model to the view
-        this.getView()?.setModel(model, "userModel");
-
-
     }
 
-
-    //Search for data when enter is pressed.
+        //Search for data when enter is pressed.
     private onKeyDown(event: KeyboardEvent): void {
         if (event.key === "Enter") {
             this.getData();
@@ -139,171 +131,46 @@ export default class Overview extends Controller {
             this.getView()?.setModel(oJSONModel, "tableusers"); 
         }
     }
-
-
-    
-
-
-
-
-//VERNADER DEZE FUNCTIE MET KLEINERE FUNCTIES
-    // public async getx() {
-    //     const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
-    //     const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
-    //     const grouptable = this.getView()?.byId("grouptable") as sap.m.panel;
-    //     const usertable = this.getView()?.byId("usertable") as sap.m.panel;
-
-    //     const userInput = this.getView()?.byId("UserID") as sap.m.Input;
-    //     const userID = userInput.getValue();
-    //     if(userID.trim() === ""){
-    //         MessageToast.show("Please enter a valid ID");
-    //         return;
-    //     }
-    //     const selectinput = this.getView()?.byId("select") as sap.m.select;
-    //     const selectedvalue = selectinput.getSelectedItem();
-
-    //     //ZOEK OP GROUP
-    //     if(selectedvalue.mProperties.key === "group"){
-    //         usertable.setVisible(false);
-    //         userpanel.setVisible(false)
-    //         const groups = await dataService.getGroupByWord(userID, this.getView());
-    //         console.log(groups.value.length)
-    //         if(groups.value.length === 0){
-    //             MessageToast.show("There are no groups that include " + userID);
-    //             grouppanel.setVisible(false);
-    //             grouptable.setVisible(false);
-    //             userpanel.setVisible(false);
-    //             usertable.setVisible(false);
-    //             return;
-
-    //             //Kan meerdere in lijst zitten maar niet getoond worden omdat er altijd 2 inzitten => Group en Group 2.
-    //             //Group matches exact maar toch 2 in lijst.
-    //         } else if(groups.value.length > 1 ){
-    //             let exactMatch = false;
-    
-    //             groups.value.forEach((group: { displayName: string }) => {
-    //                 if (group.displayName === userID) {
-    //                     exactMatch = true;
-    //                 }
-    //             });
-
-    //             if(exactMatch){
-    //                 this.setGroup(userID);
-    //                 grouptable.setVisible(false);
-                    
-    //                 return;
-
-    //             }else{
-    //                 grouppanel.setVisible(false);
-    //                 grouptable.setVisible(true);
-    //                 const oJSONModel = new JSONModel({ value: groups.value });
-    //                 this.getView().setModel(oJSONModel, "tablegroups"); 
-    //             }
-            
-               
-
-
-    //             //IN ORDE 
-    //         } else if(groups.value.length === 1){
-    //             console.log(groups.value[0])
-    //             if(groups.value[0] === "Group not found"){
-    //                 return;
-    //             }
-    //             else if(groups.value[0].displayName === userID){
-    //                 this.setGroup(userID);
-    //                 grouptable.setVisible(false);
-    //                 return;
-    //             } else{
-    //                 grouppanel.setVisible(false);
-    //                 grouptable.setVisible(true);
-    //                 const oJSONModel = new JSONModel({ value: groups.value });
-    //                 this.getView().setModel(oJSONModel, "tablegroups");
-    //             }
-    //         }
-                
-    //     //ZOEK OP USER
-    //     } else if(selectedvalue.mProperties.key === "user"){
-    //         grouptable.setVisible(false);
-    //         grouppanel.setVisible(false);
-    //         const users = await dataService.getUserByWord(userID, this.getView());
-    //         console.log(users)
-    //         if(users.value.length === 0){
-    //             MessageToast.show("There are no Users that include " + userID);
-    //             grouppanel.setVisible(false);
-    //             grouptable.setVisible(false);
-    //             userpanel.setVisible(false);
-    //             usertable.setVisible(false);
-    //             return;
-    //         } else if(users.value.length > 1){
-    //             let exactMatch = false;
-    
-    //             users.value.forEach((user: { id: string }) => {
-    //                 if (user.id === userID) {
-    //                     exactMatch = true;
-    //                 }
-    //             });
-
-    //             if(exactMatch){
-    //                 this.setUser(userID);
-    //                 usertable.setVisible(false);
-    //                 return;
-    //             }else{
-    //                 userpanel.setVisible(false);
-    //                 usertable.setVisible(true);
-    //                 const oJSONModel = new JSONModel({ value: users.value });
-    //                 this.getView().setModel(oJSONModel, "tableusers"); 
-    //             }
-    //         } else if (users.value.length === 1){
-    //             console.log(users.value[0])
-    //             if(users.value[0] === "User not found"){
-    //                 MessageToast.show("user not found")
-    //                 return;
-    //             }
-    //             else if(users.value[0].id === userID){
-    //                 this.setUser(userID);
-    //                 usertable.setVisible(false);
-    //                 return;
-    //             } else{
-    //                 userpanel.setVisible(false);
-    //                 usertable.setVisible(true);
-    //                 const oJSONModel = new JSONModel({ value: users.value });
-    //                 this.getView().setModel(oJSONModel, "tableusers");
-    //             }
-    //         }
-    //     } 
-    // }
     
 
     public async setUser(userID: any){
+        const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
+        const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
         
         const user: any = await dataService.getIASUser(userID, this.getView());
-        const userdata = user[0]
-        this.setUserDetails(userdata);
-        const grouprolerelationship = await this.getUserCollectionsViaGroup(userdata)
-        const formattedData = Object.entries(grouprolerelationship).map(([group, value]) => ({
-            group, 
-            roleCollections: value
-        }));
-        const result: any = {}
-        for (const { group, roleCollections } of formattedData) {
-            result[group] = {}; 
+            console.log(user)
+            const userdata = user[0]
+            this.setUserDetails(userdata);
+            const grouprolerelationship = await this.getUserCollectionsViaGroup(userdata)
+            const formattedData = Object.entries(grouprolerelationship).map(([group, value]) => ({
+                group, 
+                roleCollections: value
+            }));
+            const result: any = {}
+            for (const { group, roleCollections } of formattedData) {
+                result[group] = {}; 
+        
+                for (const roleCollection of roleCollections) {
+                    const response = await dataService.getRolecollectionRoles(roleCollection, this.getView()); 
+                    const roleCollectionData = response?.value?.[0]; 
+                    const roles = roleCollectionData?.roleReferences?.map((role: any) => role.name) || [];
     
-            for (const roleCollection of roleCollections) {
-                const response = await dataService.getRolecollectionRoles(roleCollection, this.getView()); 
-                const roleCollectionData = response?.value?.[0]; 
-                const roles = roleCollectionData?.roleReferences?.map((role: any) => role.name) || [];
-    
-                result[group][roleCollection] = roles;
+                    result[group][roleCollection] = roles;
             }
             const oJSONModel = new JSONModel({ value: result });
             this.getView()?.setModel(oJSONModel, "groupdetails");
 
             this.setDataToTree(result);
-           
+            grouppanel.setVisible(false);
+            userpanel.setVisible(true);
         }   
 
-        this.setDataToTree2(result);
         
+        
+       
+        this.setDataToTree2(result);
+        grouppanel.setVisible(true);
+        userpanel.setVisible(false);
         return;
     }
 
@@ -495,6 +362,8 @@ export default class Overview extends Controller {
 
         
     }
+
+    
     onUserPress(event: sap.ui.base.Event): void {
         const oSelectedItem = event.getParameter("listItem") as ColumnListItem; 
         const oContext = oSelectedItem.getBindingContext("tableusers"); 
@@ -511,6 +380,8 @@ export default class Overview extends Controller {
         exportService.onExportUser(oView);
         
     }
+
+
 
     public onExportGroup(): void {
         const oView = this.getView();

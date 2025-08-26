@@ -6,7 +6,7 @@
         <VBox>
             <SearchField
             id="UserID"
-            placeholder="Search by User ID"
+            placeholder="Search by ID"
             liveChange="onLiveChange"
             search="getData"/>
             <Select id="select" >
@@ -26,14 +26,17 @@
 
 
 
+
+
             <core:Fragment fragmentName="urvfrontend.view.fragments.UserTable" type="XML"/>
             <core:Fragment fragmentName="urvfrontend.view.fragments.UserDetails" type="XML"/>
 
             <core:Fragment fragmentName="urvfrontend.view.fragments.GroupTable" type="XML"/>
+
             <core:Fragment fragmentName="urvfrontend.view.fragments.GroupDetails" type="XML"/>
 
-
             <core:Fragment fragmentName="urvfrontend.view.fragments.RoleCollections" type="XML"/>
+
         </VBox>
     </Shell>
 </mvc:View>
