@@ -230,7 +230,7 @@ export default class Overview extends Controller {
     }
 
     public async setGroup(userID: any){
-        this.showBusy
+        this.showBusy()
         try{
         const group = await dataService.getGroup(userID, this.getView())
                 const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
@@ -259,10 +259,11 @@ export default class Overview extends Controller {
 
 
         this.setGroupDataToTree(result);
+        
+        return;
         }finally {
             this.hideBusy();
         }
-        return;
     }
 
 

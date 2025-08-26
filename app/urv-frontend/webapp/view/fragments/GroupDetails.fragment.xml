@@ -4,7 +4,7 @@
             <OverflowToolbar>
                 <Title text="User details" level="H2"/>
                 <ToolbarSpacer/>
-                <Button text="Export to Excel" icon="sap-icon://excel-attachment" press="onExportGroup"/>
+                <Button text="Export to Excel (Beta Version)" icon="sap-icon://excel-attachment" press="onExportGroup"/>
             </OverflowToolbar>
         </headerToolbar>
         
