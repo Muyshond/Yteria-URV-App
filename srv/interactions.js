@@ -32,7 +32,8 @@ module.exports = cds.service.impl(async function () {
         try{
             if(btp === "dev"){
                 
-                const authHeader = `Basic ${Buffer.from(`${IAS_CONFIG.dev.clientId}:${IAS_CONFIG.dev.clientSecret}`).toString("base64")}`;                    
+                const authHeader = getDevAuthHeader();     
+                console.log(authHeader)             
                 const response = await fetch(`${IAS_CONFIG.dev.scimUrl}/Users`, {
                         method: "GET",
                         headers: {
@@ -43,7 +44,7 @@ module.exports = cds.service.impl(async function () {
                     return data;
                 
             } else if(btp === "prod"){
-                    const authHeader = `Basic ${Buffer.from(`${IAS_CONFIG.prod.clientId}:${IAS_CONFIG.prod.clientSecret}`).toString("base64")}`;                    
+                    const authHeader = getProdAuthHeader()               
                     const response = await fetch(`${IAS_CONFIG.prod.scimUrl}/Users`, {
                         method: "GET",
                         headers: {
@@ -67,7 +68,7 @@ module.exports = cds.service.impl(async function () {
         const btp = req.data.btp;
         try{
             if(btp === "dev"){
-                const authHeader = `Basic ${Buffer.from(`${IAS_CONFIG.dev.clientId}:${IAS_CONFIG.dev.clientSecret}`).toString("base64")}`;                    
+                const authHeader = getDevAuthHeader()                
                 const userUrl = `${IAS_CONFIG.dev.scimUrl}/Users/${id}`;
                 const response = await fetch(userUrl, {
                     method: "GET",
@@ -79,7 +80,7 @@ module.exports = cds.service.impl(async function () {
                 return data;
                 
             } else if (btp === "prod") {
-                const authHeader = `Basic ${Buffer.from(`${IAS_CONFIG.prod.clientId}:${IAS_CONFIG.prod.clientSecret}`).toString("base64")}`;                    
+                const authHeader = getProdAuthHeader()                
                 const userUrl = `${IAS_CONFIG.prod.scimUrl}/Users/${id}`;
                 const response = await fetch(userUrl, {
                     method: "GET",
@@ -169,14 +170,11 @@ module.exports = cds.service.impl(async function () {
     });
 
 
-
-
-
     async function getjwt(btp) {
         try{
             if (btp === "dev"){
                 const url = IAS_CONFIG.dev.tokenUrl;
-                const authHeader = `Basic ${Buffer.from(`${IAS_CONFIG.dev.devjwtid}:${IAS_CONFIG.dev.devjwtsecret}`).toString("base64")}`;                    
+                const authHeader = getDevAuthHeader()                   
                 const response = await fetch(url, {
                     method: "POST",
                     headers: {
@@ -197,7 +195,7 @@ module.exports = cds.service.impl(async function () {
                 
             } else if (btp === "prod"){
                 const url = IAS_CONFIG.prod.tokenUrl;
-                const authHeader = `Basic ${Buffer.from(`${IAS_CONFIG.prod.devjwtid}:${IAS_CONFIG.prod.devjwtsecret}`).toString("base64")}`;                     
+                const authHeader = getProdAuthHeader()                   
                 const response = await fetch(url, {
                     method: "POST",
                     headers: {
@@ -222,9 +220,6 @@ module.exports = cds.service.impl(async function () {
     };
 
 
-    
-
-
     this.on('getGroups', async (req) => {
         
         try{
@@ -234,7 +229,7 @@ module.exports = cds.service.impl(async function () {
 
             if (btp === "dev"){
                 const groupurl = `${IAS_CONFIG.dev.scimUrl}/Groups/${id}`;
-                const authHeader = `Basic ${Buffer.from(`${IAS_CONFIG.dev.clientId}:${IAS_CONFIG.dev.clientSecret}`).toString("base64")}`;                    
+                const authHeader = getDevAuthHeader()                
 
         
                 const response = await fetch(groupurl, {
@@ -248,7 +243,7 @@ module.exports = cds.service.impl(async function () {
             } else if (btp === "prod"){
                 const groupurl = `${IAS_CONFIG.prod.scimUrl}/Groups/${id}`;
     
-                const authHeader = `Basic ${Buffer.from(`${IAS_CONFIG.prod.clientId}:${IAS_CONFIG.prod.clientSecret}`).toString("base64")}`;                    
+                const authHeader = getProdAuthHeader()                    
         
                 const response = await fetch(groupurl, {
                     method: "GET",
@@ -278,7 +273,7 @@ module.exports = cds.service.impl(async function () {
             console.log(`Start loading IAS UserGroups`);
 
             if (btp === "dev"){
-                const authHeader = `Basic ${Buffer.from(`${IAS_CONFIG.dev.clientId}:${IAS_CONFIG.dev.clientSecret}`).toString("base64")}`;                    
+                const authHeader = getDevAuthHeader()            
                 do {
                     console.log(`Start loading IAS UserGroups from ${idx}`);
                     response = await fetch(`${IAS_CONFIG.dev.scimUrl}/Groups?startIndex=${idx}`, {
@@ -301,7 +296,7 @@ module.exports = cds.service.impl(async function () {
                 const foundGroup = userGroups.find(group => group.displayName === name);
                 return foundGroup || `Group not found`;
             } else if (btp === "prod"){
-                const authHeader = `Basic ${Buffer.from(`${IAS_CONFIG.prod.clientId}:${IAS_CONFIG.prod.clientSecret}`).toString("base64")}`;                    
+                const authHeader = getProdAuthHeader()                 
                 do {
                     console.log(`Start loading IAS UserGroups from ${idx}`);
                     response = await fetch(`${IAS_CONFIG.dev.scimUrl}/Groups?startIndex=${idx}`, {
@@ -344,7 +339,7 @@ module.exports = cds.service.impl(async function () {
             console.log(`Start loading IAS UserGroups`);
 
             if (btp === "dev"){
-                const authHeader = `Basic ${Buffer.from(`${IAS_CONFIG.dev.clientId}:${IAS_CONFIG.dev.clientSecret}`).toString("base64")}`;                    
+                const authHeader =getDevAuthHeader()                   
                 do {
                     console.log(`Start loading IAS UserGroups from ${idx}`);
                     response = await fetch(`${IAS_CONFIG.dev.scimUrl}/Groups?startIndex=${idx}`, {
@@ -372,7 +367,7 @@ module.exports = cds.service.impl(async function () {
                 
                 return includesword;
             } else if (btp === "prod"){
-                const authHeader = `Basic ${Buffer.from(`${IAS_CONFIG.prod.clientId}:${IAS_CONFIG.prod.clientSecret}`).toString("base64")}`;                    
+                const authHeader = getProdAuthHeader()              
                 do {
                     console.log(`Start loading IAS UserGroups from ${idx}`);
                     response = await fetch(`${IAS_CONFIG.prod.scimUrl}/Groups?startIndex=${idx}`, {
@@ -422,7 +417,7 @@ module.exports = cds.service.impl(async function () {
             let response;
 
             if(btp === "dev"){
-                const authHeader = `Basic ${Buffer.from(`${IAS_CONFIG.dev.clientId}:${IAS_CONFIG.dev.clientSecret}`).toString("base64")}`;                    
+                const authHeader = getDevAuthHeader()                    
                 do {
                     console.log(`Start loading IAS Users from ${idx}`);
                     response = await fetch(`${IAS_CONFIG.dev.scimUrl}/Users?startIndex=${idx}`, {
@@ -451,7 +446,7 @@ module.exports = cds.service.impl(async function () {
                 
                 return includesword;
             } else if (btp === "prod"){
-                const authHeader = `Basic ${Buffer.from(`${IAS_CONFIG.prod.clientId}:${IAS_CONFIG.prod.clientSecret}`).toString("base64")}`;                    
+                const authHeader = getProdAuthHeader()       
                 do {
                     console.log(`Start loading IAS Users from ${idx}`);
                     response = await fetch(`${IAS_CONFIG.prod.scimUrl}/Users?startIndex=${idx}`, {
@@ -488,10 +483,12 @@ module.exports = cds.service.impl(async function () {
         }
     });
 
+    function getDevAuthHeader(){
+        return `Basic ${Buffer.from(`${IAS_CONFIG.dev.clientId}:${IAS_CONFIG.dev.clientSecret}`).toString("base64")}`;                    
+    }
+
+    function getProdAuthHeader(){
+        return `Basic ${Buffer.from(`${IAS_CONFIG.prod.clientId}:${IAS_CONFIG.prod.clientSecret}`).toString("base64")}`;                    
+    }
     
-
-
-
-
-
 });
