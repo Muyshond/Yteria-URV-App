@@ -31,7 +31,7 @@ https://ag7jbtfkw.trial-accounts.ondemand.com/service/scim/Groups
 
 
 
-## Add a .env file
+## Add a .env file (example)
 ```
 # DEV IAS
 DEV_SCIM_URL="https://adruyadgk.trial-accounts.ondemand.com/service/scim"

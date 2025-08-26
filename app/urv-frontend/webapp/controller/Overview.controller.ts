@@ -18,6 +18,23 @@ export default class Overview extends Controller {
     /*eslint-disable @typescript-eslint/no-empty-function*/
     public onInit(): void {
         document.addEventListener("keydown", this.onKeyDown.bind(this));
+        const view = this.getView();
+        const initialModels: Record<string, any> = {
+            tablegroups: { value: [] },
+            tableusers: { value: [] },
+            groupdetails: { value: {} },
+            rolecollectiondetails: { value: {} },
+            TreeModel: { tree: [] },
+            TreeModel2: { tree: [] },
+            userModel: {},
+            groupModel: {},
+            groupMembersModel: { members: [] }
+        };
+
+        Object.entries(initialModels).forEach(([name, data]) => {
+            const oJSONModel = new JSONModel(data);
+            view?.setModel(oJSONModel, name);
+        });
     }
 
         //Search for data when enter is pressed.
@@ -30,14 +47,13 @@ export default class Overview extends Controller {
     
     public getData() {
         const userInput = this.getUserInput();
-        if (userInput.trim() === "") {MessageToast.show("Please enter a valid ID"); return } 
+        if (userInput.trim() === "") { MessageToast.show("Please enter a valid ID"); return } 
 
 
         const searchMode = this.getSearchmode();
-        console.log(searchMode)
+        console.log(searchMode);
         if (searchMode === "group") {
             this.HandleGroupSearch(userInput);
-
         } else if (searchMode === "user") {
             this.HandleUserSearch(userInput);
         }
@@ -56,80 +72,117 @@ export default class Overview extends Controller {
 
 
     public async HandleGroupSearch(groupID: string) {
-
-        const groups = await dataService.getGroupByWord(groupID, this.getView());
-        //Error in cap backend
-        if (groups.value[0] === "Error fetching group") {
-            return MessageToast.show(`There went something wrong while trying to fetch the groups`);
-        //No groups found
-        } else if (groups.value.length === 0) {
-            return MessageToast.show(`No groups found for "${groupID}"`);
-        //One group found
-        }else if (groups.value.length === 1){
-            //No group found for ID
-            if(groups.value[0] === "Group not found"){
+        try{        
+            const groups = await dataService.getGroupByWord(groupID, this.getView());
+            if (groups === undefined) {
+                return MessageToast.show(`There went something wrong while trying to fetch the groups`);
+            } else if (groups.value.length === 0) {
+                this.clearJsonModel("tablegroups");
                 return MessageToast.show(`No groups found for "${groupID}"`);
-            //exact match => set group directly
-            } else if(groups.value[0].displayName === groupID){
-                this.setGroup(groupID);
-                return;
-            //Set groups in table so user can choose
-            } else{
+            }else if (groups.value.length === 1){
+                if(groups.value[0] === "Group not found"){
+                    return MessageToast.show(`No groups found for "${groupID}"`);
+                //exact match => set group directly
+                } else if(groups.value[0].displayName === groupID){
+                    this.setGroup(groupID);
+                    return;
+                //Set groups in table so user can choose
+                } else{
+                    const oJSONModel = new JSONModel({ value: groups.value });
+                    this.getView()?.setModel(oJSONModel, "tablegroups"); 
+                    return;
+                }
+            } else if (groups.value.length > 1){
+                groups.value.forEach((group: { displayName: string }) => {
+                    if (group.displayName === groupID) {
+                        this.setGroup(groupID);
+                        return;
+                    }
+                });
                 const oJSONModel = new JSONModel({ value: groups.value });
                 this.getView()?.setModel(oJSONModel, "tablegroups"); 
                 return;
             }
-        //List of groups found
-        } else if (groups.value.length > 1){
-            groups.value.forEach((group: { displayName: string }) => {
-                //exact match so pick this one
-                if (group.displayName === groupID) {
-                    this.setGroup(groupID);
-                    return;
-                }
-            });
-            const oJSONModel = new JSONModel({ value: groups.value });
-            this.getView()?.setModel(oJSONModel, "tablegroups"); 
-            return;
-            //this.getView()?.setModel(null, "tablegroups"); // unset the model
-        }
+        } catch (error) {
+            MessageToast.show(`Error fetching groups: ${error}`);
+        }   
     }
 
     public async HandleUserSearch(userID: string){
-        const users = await dataService.getUserByWord(userID, this.getView());
-        console.log(users)
-        if (users.value[0] === "Error fetching User") {
-            return MessageToast.show(`There went something wrong while trying to fetch the users`);
-        //No users found
-        } else if (users.value.length === 0) {
-            return MessageToast.show(`No groups found for "${userID}"`);
-        //One user found
-        }else if (users.value.length === 1) {
-            return MessageToast.show(`No groups found for "${userID}"`);
-        //One user found
-        } else if (users.value.length === 1){
-            if(users.value[0] === "User not found"){
-                MessageToast.show("user not found")
-                return;
-            } else if(users.value[0].id === userID){
-               
-                return;
-            } else{
-                const oJSONModel = new JSONModel({ value: users.value });
-                this.getView()?.setModel(oJSONModel, "tableusers");
-            }
-        }else if(users.value.length > 1){
-            users.value.forEach((user: { id: string }) => {
-                if (user.id === userID) {
-
+        try{
+            const users = await dataService.getUserByWord(userID, this.getView());
+            if (users === undefined) {
+                return MessageToast.show(`There went something wrong while trying to fetch the users`);
+            } else if (users.value.length === 0) {
+                this.clearJsonModel("tableusers");
+                return MessageToast.show(`No users found for "${userID}"`);
+            } else if (users.value.length === 1){
+                if(users.value[0] === "User not found"){
+                    MessageToast.show("user not found")
                     return;
+                } else if(users.value[0].id === userID){
+                    this.setUser(userID)
+                    return;
+                } else{
+                    const oJSONModel = new JSONModel({ value: users.value });
+                    this.getView()?.setModel(oJSONModel, "tableusers");
                 }
-            });
-            const oJSONModel = new JSONModel({ value: users.value });
-            this.getView()?.setModel(oJSONModel, "tableusers"); 
-        }
+            }else if(users.value.length > 1){
+                users.value.forEach((user: { id: string }) => {
+                    if (user.id === userID) {
+
+                        return;
+                    }
+                });
+                const oJSONModel = new JSONModel({ value: users.value });
+                this.getView()?.setModel(oJSONModel, "tableusers"); 
+            }
+        } catch (error) {
+        MessageToast.show(`Error fetching groups: ${error}`);
+        } 
     }
     
+    public clearJsonModel(modelName: string): void{
+        const oJSONModel = new JSONModel({ value: null });
+        this.getView()?.setModel(oJSONModel, modelName);
+    }
+
+
+    public clearAllJsonModels(): void {
+        const view = this.getView();
+        const modelNames = [
+        "tablegroups",
+        "tableusers",
+        "groupdetails",
+        "rolecollectiondetails",
+        "TreeModel",
+        "TreeModel2",
+        "userModel",
+        "groupModel",
+        "groupMembersModel"
+        ];
+        modelNames.forEach((name) => {
+            const model = view?.getModel(name) as JSONModel;
+            if (model) {
+                model.setData({});
+            }
+        });
+    }
+
+    public onHandleSearchmodeChange(): void {
+        MessageToast.show("Search mode changed");
+        this.clearAllJsonModels();
+        const searchmode = this.getSearchmode();
+
+        if(searchmode === "group"){
+
+        } else if (searchmode === "user"){
+
+        } else {
+            MessageToast.show("This searchmode is not supported");
+        }
+    }
+
 
     public async setUser(userID: any){
         const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
@@ -158,17 +211,15 @@ export default class Overview extends Controller {
             const oJSONModel = new JSONModel({ value: result });
             this.getView()?.setModel(oJSONModel, "groupdetails");
 
-            this.setDataToTree(result);
-            grouppanel.setVisible(false);
-            userpanel.setVisible(true);
+            this.setRoleCollectionDataToTree(result);
+            
         }   
 
         
         
        
-        this.setDataToTree2(result);
-        grouppanel.setVisible(true);
-        userpanel.setVisible(false);
+        this.setGroupDataToTree(result);
+        
         return;
     }
 
@@ -201,14 +252,13 @@ export default class Overview extends Controller {
 
 
 
-        this.setDataToTree2(result);
-        grouppanel.setVisible(true);
-        userpanel.setVisible(false);
+        this.setGroupDataToTree(result);
+        
         return;
     }
 
 
-    public setDataToTree(data: any) {
+    public setRoleCollectionDataToTree(data: any) {
         const treeformat = Object.entries(data).map(([groupName, roleCollections]) => ({
             name: groupName,
             icon: "sap-icon://group", 
@@ -225,7 +275,7 @@ export default class Overview extends Controller {
         this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel");
     }
 
-    public setDataToTree2(data: Record<string, string[]>) {
+    public setGroupDataToTree(data: Record<string, string[]>) {
         const treeformat = Object.entries(data).map(([roleCollectionName, roles]) => ({
             name: roleCollectionName,
             icon: "sap-icon://manager",
@@ -234,8 +284,7 @@ export default class Overview extends Controller {
                 icon: "sap-icon://role"
             }))
         }));
-
-        this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel2");
+        this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel");
     }
 
     public setUserDetails(userdata: any) {
@@ -288,10 +337,6 @@ export default class Overview extends Controller {
 
 
 
-
-
-
-
     onSearch(event: sap.ui.base.Event): void {
         const searchword: string = event.getParameter("newValue")?.toLowerCase() || "";
         const tree = this.byId("RoleTree") as sap.m.Tree;
@@ -320,32 +365,7 @@ export default class Overview extends Controller {
         });
     }
 
-    onSearch2(event: sap.ui.base.Event): void {
-        const searchword: string = event.getParameter("newValue")?.toLowerCase() || "";
-        const tree = this.byId("RoleTree2") as sap.m.Tree;
-        tree.expandToLevel(999); 
-        const items = tree.getItems();
-        if (!tree) return;
-        if (!searchword) {
-            items.forEach((item: any) => item.setHighlight("None"));
-            return;
-        }
-        items.forEach((item: any) => {
-            const context = item.getBindingContext("TreeModel2");
-            if (context) {
-                const index = tree.indexOfItem(item);
-                const name: string = context.getProperty("name").toLowerCase();
-                if (name.includes(searchword)) {
-                    console.log(name + searchword)
-                    item.setHighlight("Success")  
-                }else{
-
-                    item.setHighlight("None");
-                    //tree.collapse(index);
-                }
-            }
-        });
-    }
+    
 
 
     onGroupPress(event: sap.ui.base.Event): void {

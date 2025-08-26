@@ -2,25 +2,25 @@
     xmlns:mvc="sap.ui.core.mvc"
         xmlns:core="sap.ui.core">
 
-    <Shell>
-        <VBox>
+    <Shell id="main">
+        <VBox id="vbox">
             <SearchField
             id="UserID"
             placeholder="Search by ID"
             liveChange="onLiveChange"
             search="getData"/>
-            <Select id="select" >
+            <Select id="select"  change=".onHandleSearchmodeChange">
                 <items>
-                    <core:ListItem key="user" text="Search by UserID" icon="sap-icon://person-placeholder"/>
-                    <core:ListItem key="group" text="Search by group" icon="sap-icon://group"/>
-                    
+                    <core:ListItem id="user" key="user" text="Search by UserID" icon="sap-icon://person-placeholder"/>
+                    <core:ListItem id="group" key="group" text="Search by group" icon="sap-icon://group"/>
+
                 </items>
             </Select>
 
             <Select id="selectCIS" >
                 <items>
-                    <core:ListItem key="dev" text="dev" />
-                    <core:ListItem key="prod" text="prod" />
+                    <core:ListItem id="dev" key="dev" text="dev" />
+                    <core:ListItem id="prod" key="prod" text="prod" />
                 </items>
             </Select>
 
