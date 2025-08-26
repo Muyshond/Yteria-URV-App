@@ -1,5 +1,5 @@
 <core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
-    <Panel id="usertable" headerText="Select a user" visible="{= ${tableusers>/value}.length > 0 }">
+    <Panel id="usertable" headerText="Select a user" visible="{= !!${tableusers>/value} }">
         <VBox>
             <Table id="usersTable" items="{tableusers>/value}" mode="SingleSelectMaster" itemPress="onUserPress">
                 <columns>

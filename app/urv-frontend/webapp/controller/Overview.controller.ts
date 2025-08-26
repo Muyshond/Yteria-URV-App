@@ -20,15 +20,15 @@ export default class Overview extends Controller {
         document.addEventListener("keydown", this.onKeyDown.bind(this));
         const view = this.getView();
         const initialModels: Record<string, any> = {
-            tablegroups: { value: [] },
-            tableusers: { value: [] },
-            groupdetails: { value: {} },
-            rolecollectiondetails: { value: {} },
-            TreeModel: { tree: [] },
-            TreeModel2: { tree: [] },
+            tablegroups: {  },
+            tableusers: {  },
+            groupdetails: {  },
+            rolecollectiondetails: { },
+            TreeModel: { },
+            TreeModel2: { },
             userModel: {},
             groupModel: {},
-            groupMembersModel: { members: [] }
+            groupMembersModel: {  }
         };
 
         Object.entries(initialModels).forEach(([name, data]) => {
@@ -51,7 +51,6 @@ export default class Overview extends Controller {
 
 
         const searchMode = this.getSearchmode();
-        console.log(searchMode);
         if (searchMode === "group") {
             this.HandleGroupSearch(userInput);
         } else if (searchMode === "user") {
@@ -185,48 +184,40 @@ export default class Overview extends Controller {
 
 
     public async setUser(userID: any){
-        const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
-        const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
+       
         
         const user: any = await dataService.getIASUser(userID, this.getView());
-            console.log(user)
-            const userdata = user[0]
-            this.setUserDetails(userdata);
-            const grouprolerelationship = await this.getUserCollectionsViaGroup(userdata)
-            const formattedData = Object.entries(grouprolerelationship).map(([group, value]) => ({
-                group, 
-                roleCollections: value
-            }));
-            const result: any = {}
-            for (const { group, roleCollections } of formattedData) {
-                result[group] = {}; 
-        
-                for (const roleCollection of roleCollections) {
-                    const response = await dataService.getRolecollectionRoles(roleCollection, this.getView()); 
-                    const roleCollectionData = response?.value?.[0]; 
-                    const roles = roleCollectionData?.roleReferences?.map((role: any) => role.name) || [];
-    
-                    result[group][roleCollection] = roles;
-            }
-            const oJSONModel = new JSONModel({ value: result });
-            this.getView()?.setModel(oJSONModel, "groupdetails");
+        const userdata = user[0]
+        this.setUserDetails(userdata);
 
-            this.setRoleCollectionDataToTree(result);
-            
+        const grouprolerelationship = await this.getUserCollectionsViaGroup(userdata);
+        console.log(grouprolerelationship)
+        const formattedData = Object.entries(grouprolerelationship).map(([group, value]) => ({
+            group, 
+            roleCollections: value
+        }));
+        const result: any = {}
+        for (const { group, roleCollections } of formattedData) {
+            result[group] = {}; 
+    
+            for (const roleCollection of roleCollections) {
+                const response = await dataService.getRolecollectionRoles(roleCollection, this.getView()); 
+                const roleCollectionData = response?.value?.[0]; 
+                const roles = roleCollectionData?.roleReferences?.map((role: any) => role.name) || [];
+
+                result[group][roleCollection] = roles;
+        }
+        const oJSONModel = new JSONModel({ value: result });
+        this.getView()?.setModel(oJSONModel, "groupdetails");        
         }   
 
-        
-        
-       
-        this.setGroupDataToTree(result);
-        
+        this.setRoleCollectionDataToTree(result);
         return;
     }
 
     public async setGroup(userID: any){
 
         const group = await dataService.getGroup(userID, this.getView())
-        console.log(group)
                 const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
         const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
 
@@ -253,12 +244,12 @@ export default class Overview extends Controller {
 
 
         this.setGroupDataToTree(result);
-        
         return;
     }
 
 
     public setRoleCollectionDataToTree(data: any) {
+        console.log(data)
         const treeformat = Object.entries(data).map(([groupName, roleCollections]) => ({
             name: groupName,
             icon: "sap-icon://group", 
@@ -271,21 +262,30 @@ export default class Overview extends Controller {
                 }))
             }))
         }));
-        
+        console.log(treeformat)
         this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel");
     }
 
     public setGroupDataToTree(data: Record<string, string[]>) {
-        const treeformat = Object.entries(data).map(([roleCollectionName, roles]) => ({
-            name: roleCollectionName,
-            icon: "sap-icon://manager",
-            children: roles.map((role: string) => ({
-                name: role,
-                icon: "sap-icon://role"
-            }))
-        }));
-        this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel");
+        try{
+            console.log("test")
+            console.log(data)
+            const treeformat = Object.entries(data).map(([roleCollectionName, roles]) => ({
+                    name: roleCollectionName,
+                    icon: "sap-icon://manager",
+                    children: roles.map((role: string) => ({
+                        name: role,
+                        icon: "sap-icon://role"
+                    }))
+                }));
+            this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel");
+        }catch(error ) {
+            console.log(error)
+        }
+        
     }
+
+     
 
     public setUserDetails(userdata: any) {
         let oModel = this.getView()?.getModel("userModel") as JSONModel;
@@ -316,7 +316,7 @@ export default class Overview extends Controller {
         userGroups.forEach((group: any) => {
             groupRoleCollections[group] = [];
         });
-
+        console.log(roleCollections)
         roleCollections.forEach((roleCollection: any) => {
             if (!roleCollection.groupReferences && !roleCollection.samlAttributeAssignment) {
                 return;
@@ -335,12 +335,12 @@ export default class Overview extends Controller {
     }
 
 
-
-
     onSearch(event: sap.ui.base.Event): void {
         const searchword: string = event.getParameter("newValue")?.toLowerCase() || "";
         const tree = this.byId("RoleTree") as sap.m.Tree;
+
         tree.expandToLevel(999); 
+
 
         const items = tree.getItems();
         if (!tree) return;
@@ -366,8 +366,6 @@ export default class Overview extends Controller {
     }
 
     
-
-
     onGroupPress(event: sap.ui.base.Event): void {
         const oSelectedItem = event.getParameter("listItem") as ColumnListItem; 
         const oContext = oSelectedItem.getBindingContext("tablegroups"); 

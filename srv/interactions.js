@@ -8,16 +8,16 @@ const IAS_CONFIG = {
             clientId: process.env.DEV_CLIENT_ID,
             clientSecret: process.env.DEV_CLIENT_SECRET,
             tokenUrl: process.env.DEV_TOKEN_URL,
-            devjwtid: process.env.DEV_JWT_CLIENT_ID,
-            devjwtsecret: process.env.DEV_JWT_CLIENT_SECRET
+            jwtid: process.env.DEV_JWT_CLIENT_ID,
+            jwtsecret: process.env.DEV_JWT_CLIENT_SECRET
         },
         prod: {
             scimUrl: process.env.PROD_SCIM_URL,
             clientId: process.env.PROD_CLIENT_ID,
             clientSecret: process.env.PROD_CLIENT_SECRET,
             tokenUrl: process.env.PROD_TOKEN_URL,
-            prodjwtid: process.env.PROD_JWT_CLIENT_ID,
-            prodjwtsecret: process.env.PROD_JWT_CLIENT_SECRET
+            jwtid: process.env.PROD_JWT_CLIENT_ID,
+            jwtsecret: process.env.PROD_JWT_CLIENT_SECRET
         },
     };
 
@@ -73,10 +73,11 @@ module.exports = cds.service.impl(async function () {
         const btp = req.data.btp;
         try {
             const jwt = await getjwt(btp);
-    
+                console.log(jwt)
+
             const authHeader = "Bearer " + jwt;
 
-            const roleCollectionURL = `${IAS_CONFIG.apiurl}/sap/rest/authorization/v2/rolecollections`;
+            const roleCollectionURL = `${IAS_CONFIG.apiurl}/sap/rest/authorization/v2/rolecollections?showGroups=true`;
 
             const response = await fetch(roleCollectionURL, {
                 method: "GET",
@@ -90,7 +91,7 @@ module.exports = cds.service.impl(async function () {
             }
     
             const data = await response.json();
-    
+            console.log(data)
             return data; 
         } catch (error) {
             console.error("Error fetching Role Collections:", error);
@@ -107,7 +108,6 @@ module.exports = cds.service.impl(async function () {
 
         try {
             const jwt = await getjwt(btp);
-    
             const authHeader = "Bearer " + jwt;
             const roleCollectionURL = `${IAS_CONFIG.apiurl}/sap/rest/authorization/v2/rolecollections/${name}`;
 
@@ -135,10 +135,12 @@ module.exports = cds.service.impl(async function () {
 
     async function getjwt(btp) {
         try{
-           
+            
                 const config = IAS_CONFIG[btp];
                 const url = config.tokenUrl;
-                const authHeader = getAuthHeader(btp)                   
+                const { jwtid, jwtsecret } = IAS_CONFIG[btp];
+                const authHeader = `Basic ${Buffer.from(`${jwtid}:${jwtsecret}`).toString("base64")}`;
+                console.log(authHeader)
                 const response = await fetch(url, {
                     method: "POST",
                     headers: {

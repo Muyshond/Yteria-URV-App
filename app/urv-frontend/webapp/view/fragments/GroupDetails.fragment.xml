@@ -1,5 +1,5 @@
 <core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
-    <Panel id="groupdetails" visible="{= %{groupModel>id} !== null}">
+    <Panel id="groupdetails" visible="{= !!${groupModel>/id} }">
     <headerToolbar>
             <OverflowToolbar>
                 <Title text="User details" level="H2"/>

@@ -1,11 +1,11 @@
 <core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
 
-    <Panel id="rolecollections" headerText="RoleCollections" visible="{= ${rolecollectiondetails>/value}.length > 0 }">
+    <Panel id="rolecollections" headerText="RoleCollections" visible="{= !!${TreeModel>/tree} }">
         <SearchField 
             width="100%" 
             placeholder="Search in groups..." 
             liveChange=".onSearch" />
-        <Tree id="RoleTree2" items="{TreeModel>/tree}" mode="None">
+        <Tree id="RoleTree" items="{TreeModel>/tree}" mode="None">
             <StandardTreeItem title="{TreeModel>name}" icon="{TreeModel>icon}" />
         </Tree>
     </Panel>
