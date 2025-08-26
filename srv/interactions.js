@@ -73,7 +73,6 @@ module.exports = cds.service.impl(async function () {
         const btp = req.data.btp;
         try {
             const jwt = await getjwt(btp);
-                console.log(jwt)
 
             const authHeader = "Bearer " + jwt;
 
@@ -91,7 +90,6 @@ module.exports = cds.service.impl(async function () {
             }
     
             const data = await response.json();
-            console.log(data)
             return data; 
         } catch (error) {
             console.error("Error fetching Role Collections:", error);
@@ -140,7 +138,6 @@ module.exports = cds.service.impl(async function () {
                 const url = config.tokenUrl;
                 const { jwtid, jwtsecret } = IAS_CONFIG[btp];
                 const authHeader = `Basic ${Buffer.from(`${jwtid}:${jwtsecret}`).toString("base64")}`;
-                console.log(authHeader)
                 const response = await fetch(url, {
                     method: "POST",
                     headers: {

@@ -1,13 +1,9 @@
 import MessageToast from "sap/m/MessageToast";
 import Controller from "sap/ui/core/mvc/Controller";
-import { form } from "sap/ui/layout/library";
 import JSONModel from "sap/ui/model/json/JSONModel";
-import Filter from "sap/ui/model/Filter";
-import FilterOperator from "sap/ui/model/FilterOperator";
-import containsOrEquals from "sap/ui/dom/containsOrEquals";
-import Spreadsheet from "sap/ui/export/Spreadsheet";
 import dataService from "../service/dataService"; 
 import exportService from "../service/exportService"; 
+import BusyIndicator from "sap/ui/core/BusyIndicator";
 
 
 /**
@@ -58,6 +54,13 @@ export default class Overview extends Controller {
         }
     }
 
+    private showBusy(): void {
+        BusyIndicator.show(0); 
+    }
+
+    private hideBusy(): void {
+        BusyIndicator.hide();
+    }
 
     public getUserInput(){
         const userInput = this.getView()?.byId("UserID") as sap.m.Input;
@@ -71,6 +74,8 @@ export default class Overview extends Controller {
 
 
     public async HandleGroupSearch(groupID: string) {
+        this.showBusy();
+
         try{        
             const groups = await dataService.getGroupByWord(groupID, this.getView());
             if (groups === undefined) {
@@ -104,10 +109,13 @@ export default class Overview extends Controller {
             }
         } catch (error) {
             MessageToast.show(`Error fetching groups: ${error}`);
-        }   
+        } finally {
+            this.hideBusy();
+        }
     }
 
     public async HandleUserSearch(userID: string){
+        this.showBusy()
         try{
             const users = await dataService.getUserByWord(userID, this.getView());
             if (users === undefined) {
@@ -138,7 +146,9 @@ export default class Overview extends Controller {
             }
         } catch (error) {
         MessageToast.show(`Error fetching groups: ${error}`);
-        } 
+        } finally {
+        this.hideBusy();
+    }
     }
     
     public clearJsonModel(modelName: string): void{
@@ -184,14 +194,15 @@ export default class Overview extends Controller {
 
 
     public async setUser(userID: any){
-       
+       this.showBusy()
+        try{
+
         
         const user: any = await dataService.getIASUser(userID, this.getView());
         const userdata = user[0]
         this.setUserDetails(userdata);
 
         const grouprolerelationship = await this.getUserCollectionsViaGroup(userdata);
-        console.log(grouprolerelationship)
         const formattedData = Object.entries(grouprolerelationship).map(([group, value]) => ({
             group, 
             roleCollections: value
@@ -213,10 +224,14 @@ export default class Overview extends Controller {
 
         this.setRoleCollectionDataToTree(result);
         return;
+    }finally {
+        this.hideBusy();
+    }
     }
 
     public async setGroup(userID: any){
-
+        this.showBusy
+        try{
         const group = await dataService.getGroup(userID, this.getView())
                 const userpanel = this.getView()?.byId("byUserId") as sap.m.panel;
         const grouppanel = this.getView()?.byId("bygroup") as sap.m.panel;
@@ -244,12 +259,14 @@ export default class Overview extends Controller {
 
 
         this.setGroupDataToTree(result);
+        }finally {
+            this.hideBusy();
+        }
         return;
     }
 
 
     public setRoleCollectionDataToTree(data: any) {
-        console.log(data)
         const treeformat = Object.entries(data).map(([groupName, roleCollections]) => ({
             name: groupName,
             icon: "sap-icon://group", 
@@ -262,14 +279,12 @@ export default class Overview extends Controller {
                 }))
             }))
         }));
-        console.log(treeformat)
         this.getView()?.setModel(new JSONModel({ tree: treeformat }), "TreeModel");
     }
 
     public setGroupDataToTree(data: Record<string, string[]>) {
         try{
-            console.log("test")
-            console.log(data)
+            
             const treeformat = Object.entries(data).map(([roleCollectionName, roles]) => ({
                     name: roleCollectionName,
                     icon: "sap-icon://manager",
@@ -294,7 +309,6 @@ export default class Overview extends Controller {
             this.getView()?.setModel(oModel, "userModel");
         }
         oModel.setData(userdata);
-        console.log(userdata)
     }
 
     public setGroupDetails(groupdata: any) {
@@ -316,7 +330,6 @@ export default class Overview extends Controller {
         userGroups.forEach((group: any) => {
             groupRoleCollections[group] = [];
         });
-        console.log(roleCollections)
         roleCollections.forEach((roleCollection: any) => {
             if (!roleCollection.groupReferences && !roleCollection.samlAttributeAssignment) {
                 return;
@@ -354,7 +367,6 @@ export default class Overview extends Controller {
                 const index = tree.indexOfItem(item);
                 const name: string = context.getProperty("name").toLowerCase();
                 if (name.includes(searchword)) {
-                    console.log(name + searchword)
                     item.setHighlight("Success")  
                 }else{
 
@@ -387,7 +399,6 @@ export default class Overview extends Controller {
 
         const oUserData = oContext.getObject() as { id: string }; 
         const userID = oUserData.id; 
-        console.log(userID)
         this.setUser(userID);
     }
 
