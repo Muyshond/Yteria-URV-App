@@ -31,7 +31,7 @@ https://ag7jbtfkw.trial-accounts.ondemand.com/service/scim/Groups
 
 
 
-## Add a .env file (example)
+## Add a .env file (example for local)
 ```
 # DEV IAS
 DEV_SCIM_URL="https://adruyadgk.trial-accounts.ondemand.com/service/scim"
@@ -54,3 +54,11 @@ PROD_JWT_CLIENT_SECRET = "0c210129-4c0d-499a-9315-ec9e6cf26748$kxHbNKL8EZtDtpspz
 #api authentication url 
 BTP_API_URL = "https://api.authentication.us10.hana.ondemand.com"
 ```
+
+
+## Make destination for deployed app
+- Make destination for each subaccount (prod, dev, acc, ...) => change code to add subaccounts in frontend (add in dropdown) and add in interactions.js the subaccount in SCIM_DESTINATION_MAP
+
+
+![alt text](img/scim-destination.png)
+![alt text](img/btp-destination.png)

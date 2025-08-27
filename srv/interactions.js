@@ -1,68 +1,99 @@
 const cds = require('@sap/cds');
+const { getDestination } = require('@sap-cloud-sdk/connectivity');
+const { executeHttpRequest } = require('@sap-cloud-sdk/http-client'); 
 
 
-const IAS_CONFIG = {
-        apiurl: process.env.BTP_API_URL,
+
+
+    const IAS_CONFIG = {
+        apiurl: "https://api.authentication.us10.hana.ondemand.com",
         dev: {
-            scimUrl: process.env.DEV_SCIM_URL,
-            clientId: process.env.DEV_CLIENT_ID,
-            clientSecret: process.env.DEV_CLIENT_SECRET,
-            tokenUrl: process.env.DEV_TOKEN_URL,
-            jwtid: process.env.DEV_JWT_CLIENT_ID,
-            jwtsecret: process.env.DEV_JWT_CLIENT_SECRET
+            scimUrl: "https://1b9caf5a.trial-accounts.ondemand.com/service/scim",
+            clientId: "7cf4f5fe-f631-4f70-85f7-984c2ef642e5",
+            clientSecret: "T?Bs3m7_Ag@X3VlYFVaiTTEhpjy=z][A3i7",
+            tokenUrl: "https://1b9caf5atrial.authentication.us10.hana.ondemand.com/oauth/token",
+            jwtid: "sb-na-7612fc93-da2f-44c1-bd96-1be4a79c655f!a505822",
+            jwtsecret: "6d234971-7a04-4624-a05c-17204291dab4$JyKR40Vw_twKQpIZuQ_1QgKm8kxjGxQsOgaF8UJQ65s="
         },
         prod: {
-            scimUrl: process.env.PROD_SCIM_URL,
-            clientId: process.env.PROD_CLIENT_ID,
-            clientSecret: process.env.PROD_CLIENT_SECRET,
-            tokenUrl: process.env.PROD_TOKEN_URL,
-            jwtid: process.env.PROD_JWT_CLIENT_ID,
-            jwtsecret: process.env.PROD_JWT_CLIENT_SECRET
+            scimUrl: "https://amw0sflcw.trial-accounts.ondemand.com/service/scim",
+            clientId: "ef36dfb9-a993-42f1-8c9a-0f267f55a486",
+            clientSecret: "A.=/1SNPk2SmoeB[NHK@rf0T=_v=fgsaM/",
+            tokenUrl: "https://1b9caf5atrial.authentication.us10.hana.ondemand.com/oauth/token",
+            jwtid: "sb-na-7612fc93-da2f-44c1-bd96-1be4a79c655f!a505822",
+            jwtsecret: "6d234971-7a04-4624-a05c-17204291dab4$JyKR40Vw_twKQpIZuQ_1QgKm8kxjGxQsOgaF8UJQ65s="
         },
     };
 
+    const SCIM_DESTINATION_MAP = {
+        prod: "prod-scim",
+        dev: "dev-scim",
+        //acc: "acc-scim"
+        //...
+    };
+
+    const BTP_DESTINATION_MAP = {
+        prod: "btp-prod-url",
+        dev: "btp-dev-url",
+        //acc: "acc-scim"
+        //...
+    };
+
+    async function getDestinationConfig(btp) {
+        const destName = SCIM_DESTINATION_MAP[btp];
+        if (!destName) {
+            throw new Error(`No destination configured for btp "${btp}"`);
+        }
+        
+        const dest = await getDestination({ destinationName: destName });
+        if (!dest) {
+            throw new Error(`Destination "${destName}" not found`);
+        }
+        return dest;
+    }
+
+    async function getBTPDestination(btp) {
+        const destName = BTP_DESTINATION_MAP[btp];
+        if (!destName) {
+            throw new Error(`No destination configured for btp "${btp}"`);
+        }
+
+        const dest = await getDestination({ destinationName: destName });
+        if (!dest) {
+            throw new Error(`BTP Destination not found`);
+        }
+        return dest;
+    }
 
 module.exports = cds.service.impl(async function () {
 
     this.on('getIASUsers', async (req) => {
-        const btp = req.data.btp;
-        try{
-            const config = IAS_CONFIG[btp];
-            const authHeader = getAuthHeader(btp);
-            const response = await fetch(`${config.scimUrl}/Users`, {
-                method: "GET",
-                headers: { Authorization: authHeader }
+        try {
+        const dest = await getDestinationConfig(req.data.btp);
+        const response = await executeHttpRequest(dest, {
+                method: 'GET',
+                url: `/Users` 
             });
-            const data = await response.json();
-            return data;
-        } catch(error){
-            console.error(error)
-            req.error(500, "Error fetching Users")
+        return response.data;
+        } catch (error) {
+        console.error(error);
+        req.error(500, "Error fetching Users"+ error);
         }
     });
 
 
 
     this.on('getIASUser', async (req) => {
-        const id = req.data.id;
-        const btp = req.data.btp;
-        try{
-                const config = IAS_CONFIG[btp];
-                const authHeader = getAuthHeader(btp);
-                const userUrl = `${config.scimUrl}/Users/${id}`;
-                const response = await fetch(userUrl, {
-                    method: "GET",
-                    headers: {
-                        "Authorization": authHeader
-                    }
-                })
-                const data =  await response.json();
-                return data;
-               
-            
-        }catch(error){
-                console.error(error)
-                req.error(500, "Failed to fetch IAS User")
+        try {
+        const dest = await getDestinationConfig(req.data.btp);
+        const response = await executeHttpRequest(dest, {
+                method: 'GET',
+                url: `/Users/${req.data.id}` 
+            });
+            return response.data;     
+        } catch (error) {
+        console.error(error);
+        req.error(500, "Failed to fetch IAS User" + error);
         }
     });
 
@@ -72,25 +103,14 @@ module.exports = cds.service.impl(async function () {
 
         const btp = req.data.btp;
         try {
-            const jwt = await getjwt(btp);
+            
 
-            const authHeader = "Bearer " + jwt;
-
-            const roleCollectionURL = `${IAS_CONFIG.apiurl}/sap/rest/authorization/v2/rolecollections?showGroups=true`;
-
-            const response = await fetch(roleCollectionURL, {
-                method: "GET",
-                headers: {
-                    "Authorization": authHeader
-                }
+            const dest = await getBTPDestination(btp);
+            const response = await executeHttpRequest(dest, {
+                method: 'GET',
+                url: `/sap/rest/authorization/v2/rolecollections?showGroups=true` 
             });
-    
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-    
-            const data = await response.json();
-            return data; 
+            return response.data;
         } catch (error) {
             console.error("Error fetching Role Collections:", error);
             req.error(500, "Failed to fetch role collections");
@@ -104,26 +124,20 @@ module.exports = cds.service.impl(async function () {
         const name = req.data.roleCollectionName
         const btp = req.data.btp;
 
+
         try {
-            const jwt = await getjwt(btp);
-            const authHeader = "Bearer " + jwt;
-            const roleCollectionURL = `${IAS_CONFIG.apiurl}/sap/rest/authorization/v2/rolecollections/${name}`;
+
+            const dest = await getBTPDestination(btp);
+            const response = await executeHttpRequest(dest, {
+                method: 'GET',
+                url: `/sap/rest/authorization/v2/rolecollections/${name}` 
+            });
+            
 
     
-            const response = await fetch(roleCollectionURL, {
-                method: "GET",
-                headers: {
-                    "Authorization": authHeader
-                }
-            });
     
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-    
-            const data = await response.json();
-    
-            return data; 
+            return response.data;
+
         } catch (error) {
             console.error("Error fetching Role Collections:", error);
             req.error(500, "Failed to fetch role collections");
@@ -131,104 +145,75 @@ module.exports = cds.service.impl(async function () {
     });
 
 
-    async function getjwt(btp) {
-        try{
+    // async function getjwt(btp) {
+    //     try{
             
-                const config = IAS_CONFIG[btp];
-                const url = config.tokenUrl;
-                const { jwtid, jwtsecret } = IAS_CONFIG[btp];
-                const authHeader = `Basic ${Buffer.from(`${jwtid}:${jwtsecret}`).toString("base64")}`;
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": authHeader,
-                        "Content-Type": "application/x-www-form-urlencoded"
-                    },
-                    body: new URLSearchParams({ grant_type: "client_credentials" })
-                });
+    //             const config = IAS_CONFIG[btp];
+    //             const url = config.tokenUrl;
+    //             const { jwtid, jwtsecret } = IAS_CONFIG[btp];
+    //             const authHeader = `Basic ${Buffer.from(`${jwtid}:${jwtsecret}`).toString("base64")}`;
+    //             const response = await fetch(url, {
+    //                 method: "POST",
+    //                 headers: {
+    //                     "Authorization": authHeader,
+    //                     "Content-Type": "application/x-www-form-urlencoded"
+    //                 },
+    //                 body: new URLSearchParams({ grant_type: "client_credentials" })
+    //             });
             
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch token: ${response.status}`);
-                }
+    //             if (!response.ok) {
+    //                 throw new Error(`Failed to fetch token: ${response.status}`);
+    //             }
             
-                const data = await response.json();
-                return data.access_token; 
+    //             const data = await response.json();
+    //             return data.access_token; 
             
             
-        }catch(error) { 
-            throw error; 
-        }
+    //     }catch(error) { 
+    //         throw error; 
+    //     }
         
-    };
+    // };
 
 
     this.on('getGroups', async (req) => {
-        
-        try{
-            
-            const btp = req.data.btp;
-            const id = req.data.GroupID
-            const config = IAS_CONFIG[btp];
-            
-            const groupurl = `${config.scimUrl}/Groups/${id}`;
-    
-            const authHeader = getAuthHeader(btp)                    
-        
-                const response = await fetch(groupurl, {
-                    method: "GET",
-                    headers: {
-                        "Authorization": authHeader
-                    }
-                })
-            const data = await response.json();
-            return data;
-            
-        } catch(error){
-            console.error("Failed to fetch groups")
-                req.error(500, "Failed to fetch groups")
+        try {
+            const dest = await getDestinationConfig(req.data.btp);
+            const response = await executeHttpRequest(dest, {
+                method: 'GET',
+                url: `/Groups/${req.data.GroupID}`
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Failed to fetch groups", error);
+            req.error(500, "Failed to fetch groups");
         }
-        
     });
 
 
 
     this.on('getGroupByName', async (req) => {
         try {
-            const btp = req.data.btp;
-            const name = req.data.GroupName;
-            let userGroups = [];
+            const dest = await getDestinationConfig(req.data.btp);
             let idx = 1;
+            let allGroups = [];
             let response;
-            console.log(`Start loading IAS UserGroups`);
-            const config = IAS_CONFIG[btp];
-            
-                const authHeader = getAuthHeader(btp)                 
-                do {
-                    console.log(`Start loading IAS UserGroups from ${idx}`);
-                    response = await fetch(`${config.scimUrl}/Groups?startIndex=${idx}`, {
-                        headers: {
-                            "Authorization": authHeader
-                        },
-                        method: "GET"
-                    });
-        
-                    const data = await response.json();
-                    userGroups = [...userGroups, ...data.Resources];
-        
-                    console.log(`Loading IAS UserGroups - current count ${userGroups.length}`);
-                    idx += 100;
-        
-                } while (userGroups.length < response.totalResults);
-        
-                console.log(`Finished loading IAS UserGroups - count ${userGroups.length}`);
-        
-                const foundGroup = userGroups.find(group => group.displayName === name);
-                return foundGroup || `Group not found`;
-            
+
+            do {
+                response = await executeHttpRequest(dest, {
+                    method: 'GET',
+                    url: `/Groups?startIndex=${idx}`
+                });
+                allGroups = [...allGroups, ...response.data.Resources];
+                idx += 100;
+            } while (allGroups.length < response.data.totalResults);
+
+            const foundGroup = allGroups.find(g => g.displayName === req.data.GroupName);
+            return foundGroup || `Group not found`;
 
         } catch (error) {
             console.error("Error fetching IAS groups:", error);
-            req.error(500, "Failed to fetch groups")
+            req.error(500, "Failed to fetch groups");
         }
     });
 
@@ -237,48 +222,25 @@ module.exports = cds.service.impl(async function () {
 
     this.on('getGroupByWord', async (req) => {
         try {
-            const btp = req.data.btp;
-            const name = req.data.GroupName;
-            let userGroups = [];
+            const dest = await getDestinationConfig(req.data.btp);
             let idx = 1;
+            let allGroups = [];
             let response;
-            console.log(`Start loading IAS UserGroups`);
-            const config = IAS_CONFIG[btp];
-            
-                const authHeader = getAuthHeader(btp)              
-                do {
-                    console.log(`Start loading IAS UserGroups from ${idx}`);
-                    response = await fetch(`${config.scimUrl}/Groups?startIndex=${idx}`, {
-                        headers: {
-                            "Authorization": authHeader
-                        },
-                        method: "GET"
-                    });
-        
-                    const data = await response.json();
-                    userGroups = [...userGroups, ...data.Resources];
-        
-                    console.log(`Loading IAS UserGroups - current count ${userGroups.length}`);
-                    idx += 100;
-        
-                } while (userGroups.length < response.totalResults);
-        
-                console.log(`Finished loading IAS UserGroups - count ${userGroups.length}`);
-                let includesword = []
-                userGroups.forEach(group => {
-                    if (group.displayName.toLowerCase().includes(name.toLowerCase())) {
-                        includesword.push(group);
-                    }
-                });
-                
-                return includesword;
-            
 
-            
-    
+            do {
+                response = await executeHttpRequest(dest, {
+                    method: 'GET',
+                    url: `/Groups?startIndex=${idx}`
+                });
+                allGroups = [...allGroups, ...response.data.Resources];
+                idx += 100;
+            } while (allGroups.length < response.data.totalResults);
+
+            return allGroups.filter(g => g.displayName.toLowerCase().includes(req.data.GroupName.toLowerCase()));
+
         } catch (error) {
-            console.error("Error fetching IAS groups:", error);
-            req.error(500, "Error fetching groups")
+            console.error("Error fetching IAS groups by word:", error);
+            req.error(500, "Failed to fetch groups");
         }
     });
 
@@ -287,55 +249,32 @@ module.exports = cds.service.impl(async function () {
 
     this.on('getUserByWord', async (req) => {
         try {
-            const id = req.data.id;
-            const btp = req.data.btp;
-
-            let users = [];
+            const dest = await getDestinationConfig(req.data.btp);
             let idx = 1;
+            let allUsers = [];
             let response;
-            const config = IAS_CONFIG[btp];
-            
-                const authHeader = getAuthHeader(btp)       
-                do {
-                    console.log(`Start loading IAS Users from ${idx}`);
-                    response = await fetch(`${config.scimUrl}/Users?startIndex=${idx}`, {
-                        headers: {
-                            "Authorization": authHeader
-                        },
-                        method: "GET"
-                    });
-        
-                    const data = await response.json();
-                    users = [...users, ...data.Resources];
-        
-                    console.log(`Loading IAS User - current count ${users.length}`);
-                    idx += 100;
-        
-                } while (users.length < response.totalResults);
-        
-                console.log(`Finished loading IAS Users - count ${users.length}`);
-                let includesword = []
-                users.forEach(user => {
-                    if (user.id.toLowerCase().includes(id.trim().toLowerCase())) {
-                        
-                       includesword.push(user);
-                    }
+
+            do {
+                response = await executeHttpRequest(dest, {
+                    method: 'GET',
+                    url: `/Users?startIndex=${idx}`
                 });
-                
-                return includesword;
-            
-            
-    
+                allUsers = [...allUsers, ...response.data.Resources];
+                idx += 100;
+            } while (allUsers.length < response.data.totalResults);
+
+            return allUsers.filter(u => u.id.toLowerCase().includes(req.data.id.trim().toLowerCase()));
+
         } catch (error) {
-            console.error("Error fetching IAS groups:", error);
-            req.error(500, "Error fetching groups")
+            console.error("Error fetching IAS users by word:", error);
+            req.error(500, "Failed to fetch users");
         }
     });
 
-    function getAuthHeader(btp) {
-        const { clientId, clientSecret } = IAS_CONFIG[btp];
-        return `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`;
-    }
+    // function getAuthHeader(btp) {
+    //     const { clientId, clientSecret } = IAS_CONFIG[btp];
+    //     return `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`;
+    // }
     
     
 
