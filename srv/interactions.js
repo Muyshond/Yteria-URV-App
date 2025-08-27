@@ -5,25 +5,25 @@ const { executeHttpRequest } = require('@sap-cloud-sdk/http-client');
 
 
 
-    const IAS_CONFIG = {
-        apiurl: "https://api.authentication.us10.hana.ondemand.com",
-        dev: {
-            scimUrl: "https://1b9caf5a.trial-accounts.ondemand.com/service/scim",
-            clientId: "7cf4f5fe-f631-4f70-85f7-984c2ef642e5",
-            clientSecret: "T?Bs3m7_Ag@X3VlYFVaiTTEhpjy=z][A3i7",
-            tokenUrl: "https://1b9caf5atrial.authentication.us10.hana.ondemand.com/oauth/token",
-            jwtid: "sb-na-7612fc93-da2f-44c1-bd96-1be4a79c655f!a505822",
-            jwtsecret: "6d234971-7a04-4624-a05c-17204291dab4$JyKR40Vw_twKQpIZuQ_1QgKm8kxjGxQsOgaF8UJQ65s="
-        },
-        prod: {
-            scimUrl: "https://amw0sflcw.trial-accounts.ondemand.com/service/scim",
-            clientId: "ef36dfb9-a993-42f1-8c9a-0f267f55a486",
-            clientSecret: "A.=/1SNPk2SmoeB[NHK@rf0T=_v=fgsaM/",
-            tokenUrl: "https://1b9caf5atrial.authentication.us10.hana.ondemand.com/oauth/token",
-            jwtid: "sb-na-7612fc93-da2f-44c1-bd96-1be4a79c655f!a505822",
-            jwtsecret: "6d234971-7a04-4624-a05c-17204291dab4$JyKR40Vw_twKQpIZuQ_1QgKm8kxjGxQsOgaF8UJQ65s="
-        },
-    };
+    // const IAS_CONFIG = {
+    //     apiurl: "https://api.authentication.us10.hana.ondemand.com",
+    //     dev: {
+    //         scimUrl: "https://1b9caf5a.trial-accounts.ondemand.com/service/scim",
+    //         clientId: "7cf4f5fe-f631-4f70-85f7-984c2ef642e5",
+    //         clientSecret: "T?Bs3m7_Ag@X3VlYFVaiTTEhpjy=z][A3i7",
+    //         tokenUrl: "https://1b9caf5atrial.authentication.us10.hana.ondemand.com/oauth/token",
+    //         jwtid: "sb-na-7612fc93-da2f-44c1-bd96-1be4a79c655f!a505822",
+    //         jwtsecret: "6d234971-7a04-4624-a05c-17204291dab4$JyKR40Vw_twKQpIZuQ_1QgKm8kxjGxQsOgaF8UJQ65s="
+    //     },
+    //     prod: {
+    //         scimUrl: "https://amw0sflcw.trial-accounts.ondemand.com/service/scim",
+    //         clientId: "ef36dfb9-a993-42f1-8c9a-0f267f55a486",
+    //         clientSecret: "A.=/1SNPk2SmoeB[NHK@rf0T=_v=fgsaM/",
+    //         tokenUrl: "https://1b9caf5atrial.authentication.us10.hana.ondemand.com/oauth/token",
+    //         jwtid: "sb-na-7612fc93-da2f-44c1-bd96-1be4a79c655f!a505822",
+    //         jwtsecret: "6d234971-7a04-4624-a05c-17204291dab4$JyKR40Vw_twKQpIZuQ_1QgKm8kxjGxQsOgaF8UJQ65s="
+    //     },
+    // };
 
     const SCIM_DESTINATION_MAP = {
         prod: "prod-scim",
